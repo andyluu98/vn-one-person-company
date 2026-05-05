@@ -9,3 +9,11 @@ __pycache__/
 !templates-vn/**/*.xlsx
 .vncoderc
 checkpoints/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+Thumbs.db

@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "AI-powered Operating System for Vietnamese SMEs"
 authors = [{ email = "ltuananhsd@gmail.com" }]
 license = "MIT"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=0.2.0",
@@ -37,3 +38,7 @@ packages = ["core"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
