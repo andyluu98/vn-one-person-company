@@ -1,7 +1,7 @@
 ---
 type: brain
 section: budget
-last_updated: 2026-05-06
+last_updated: YYYY-MM-DD
 ---
 # Ngân sách
 
@@ -12,7 +12,7 @@ last_updated: 2026-05-06
 
 ## Phân bổ phòng ban (quý hiện tại)
 
-| Phòng | Cấp | Đã chi | Còn lại |
+| Phòng | Cấp phát | Đã chi | Còn lại |
 |---|---|---|---|
 | Marketing | | | |
 | Sales | | | |

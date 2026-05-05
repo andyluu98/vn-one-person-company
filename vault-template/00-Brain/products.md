@@ -1,7 +1,7 @@
 ---
 type: brain
 section: products
-last_updated: 2026-05-06
+last_updated: YYYY-MM-DD
 ---
 # Sản phẩm / Dịch vụ
 

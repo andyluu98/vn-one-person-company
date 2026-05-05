@@ -1,7 +1,7 @@
 ---
 type: brain
 section: decisions
-last_updated: 2026-05-06
+last_updated: YYYY-MM-DD
 ---
 # Nhật ký quyết định (append-only)
 

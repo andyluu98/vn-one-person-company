@@ -1,7 +1,7 @@
 ---
 type: brain
 section: laws
-last_updated: 2026-05-06
+last_updated: YYYY-MM-DD
 ---
 # Luật & Quy định liên quan DN
 

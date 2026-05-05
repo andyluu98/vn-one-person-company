@@ -1,7 +1,7 @@
 ---
 type: brain
 section: strategy
-last_updated: 2026-05-06
+last_updated: YYYY-MM-DD
 ---
 # Chiến lược DN
 

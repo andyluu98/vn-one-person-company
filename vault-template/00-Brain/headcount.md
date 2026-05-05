@@ -1,12 +1,13 @@
 ---
 type: brain
 section: headcount
-last_updated: 2026-05-06
+last_updated: YYYY-MM-DD
 ---
 # Nhân sự / Agents
 
 ## Phòng ban đang active
-[Liệt kê phòng + agents]
+<!-- Format: - XX-tên-phong | vd: - 07-marketing -->
+[Liệt kê phòng, dùng đúng mã phòng, vd: - 07-marketing]
 
 ## Gap chuyên môn
 [Phòng nào thiếu agent gì]
