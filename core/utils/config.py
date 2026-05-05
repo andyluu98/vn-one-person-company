@@ -30,9 +30,11 @@ class Config(BaseModel):
 
 def load_config(path: Optional[Path] = None) -> Config:
     """Load config from path, ~/.vncoderc, or return defaults."""
-    if path and path.exists():
-        return Config(**yaml.safe_load(path.read_text(encoding="utf-8")))
-    home_path = Path.home() / ".vncoderc"
-    if home_path.exists():
-        return Config(**yaml.safe_load(home_path.read_text(encoding="utf-8")))
+    candidates = ([path] if path else []) + [Path.home() / ".vncoderc"]
+    for p in candidates:
+        if p and p.exists():
+            try:
+                return Config(**yaml.safe_load(p.read_text(encoding="utf-8")))
+            except Exception:
+                pass  # malformed config — fall through to defaults
     return Config()
