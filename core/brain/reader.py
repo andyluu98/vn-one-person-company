@@ -93,6 +93,7 @@ class BrainReader:
         return [LawReference(name=r[0], code=r[1]) for r in rows]
 
     def _read_decisions(self) -> list[DecisionEntry]:
+        # TODO Phase 3: parse DecisionEntry blocks from decisions-log.md
         return []
 
     def _read_state(self) -> str:

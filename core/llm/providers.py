@@ -30,5 +30,5 @@ class ClaudeProvider:
         return resp.content[0].text
 
 
-def get_default_provider() -> ClaudeProvider:
+def get_default_provider() -> LLMProvider:
     return ClaudeProvider()
