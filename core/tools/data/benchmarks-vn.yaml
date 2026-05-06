@@ -1,0 +1,37 @@
+saas_b2b:
+  cac_vnd_per_sql:
+    median: 8000000
+    range: [5000000, 15000000]
+    source: "openview SaaS report 2025 + Vietnam-specific adjustments"
+  roas_long_term:
+    range: [3, 8]
+    note: "12-month LTV / CAC"
+  conversion_lead_to_sql:
+    range: [0.08, 0.15]
+
+ecommerce_d2c_vn:
+  conversion_rate:
+    median: 0.025
+    range: [0.01, 0.05]
+  aov_vnd:
+    median: 450000
+  cod_share:
+    median: 0.65
+  return_rate:
+    median: 0.08
+
+restaurant_casual_vn:
+  food_cost_pct:
+    target: 35
+    range: [28, 38]
+  labor_cost_pct:
+    target: 30
+    range: [25, 35]
+  table_turn_per_day:
+    range: [2.5, 4.0]
+
+retail_offline_vn:
+  inventory_turnover_per_year:
+    range: [4, 8]
+  shrinkage_pct:
+    target: 1.5
