@@ -1,6 +1,7 @@
 ---
 type: brain
 section: strategy
+aliases: ["Chiến lược", "Chiến lược DN", "Strategy", "Tầm nhìn"]
 last_updated: YYYY-MM-DD
 ---
 # Chiến lược DN

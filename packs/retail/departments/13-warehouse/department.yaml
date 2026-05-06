@@ -1,9 +1,15 @@
-code: "13-warehouse"
-name_vn: "Kho"
+code: 13-warehouse
+name_vn: Kho
 tier: 3
-description: "Phòng Kho — inventory, picking, packing"
+description: Phòng Kho — inventory, picking, packing
 agents:
-  - warehouse-ops
+- warehouse-ops
 default_speaker: warehouse-ops
 refs_folder: refs/
-depends_on: ["05-operations", "14-logistics"]
+depends_on:
+- 05-operations
+- 14-logistics
+aliases_vn:
+- Phòng Kho vận
+- Kho
+- Warehouse

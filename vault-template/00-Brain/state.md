@@ -1,6 +1,7 @@
 ---
 type: brain
 section: state
+aliases: ["Tình trạng", "Giai đoạn", "Trạng thái DN", "State"]
 last_updated: YYYY-MM-DD
 ---
 # Trạng thái DN hiện tại

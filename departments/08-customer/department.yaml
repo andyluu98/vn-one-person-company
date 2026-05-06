@@ -11,3 +11,8 @@ refs_folder: refs/
 depends_on: []
 debate_role:
   default: pro
+aliases_vn:
+- Phòng Chăm sóc Khách hàng
+- Khách hàng
+- CSKH
+- CS

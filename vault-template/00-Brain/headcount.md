@@ -1,6 +1,7 @@
 ---
 type: brain
 section: headcount
+aliases: ["Nhân sự", "Headcount", "Quân số"]
 last_updated: YYYY-MM-DD
 ---
 # Nhân sự / Agents

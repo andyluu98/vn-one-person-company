@@ -10,3 +10,7 @@ refs_folder: refs/
 depends_on: []
 debate_role:
   default: pro
+aliases_vn:
+- Phòng Tăng trưởng
+- Tăng trưởng
+- Growth

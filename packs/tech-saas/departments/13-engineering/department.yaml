@@ -1,9 +1,15 @@
-code: "13-engineering"
-name_vn: "Kỹ thuật"
+code: 13-engineering
+name_vn: Kỹ thuật
 tier: 4
-description: "Phòng Kỹ thuật — backend, frontend, DevOps, AI"
+description: Phòng Kỹ thuật — backend, frontend, DevOps, AI
 agents:
-  - backend-architect
+- backend-architect
 default_speaker: backend-architect
 refs_folder: refs/
-depends_on: ["09-product-tech", "14-product-design"]
+depends_on:
+- 09-product-tech
+- 14-product-design
+aliases_vn:
+- Phòng Kỹ thuật
+- Engineering
+- Tech

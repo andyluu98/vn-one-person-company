@@ -1,6 +1,7 @@
 ---
 type: brain
 section: products
+aliases: ["Sản phẩm", "Dịch vụ", "Sản phẩm Dịch vụ", "Products"]
 last_updated: YYYY-MM-DD
 ---
 # Sản phẩm / Dịch vụ

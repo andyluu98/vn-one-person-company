@@ -1,9 +1,14 @@
-code: "15-data"
-name_vn: "Dữ liệu"
+code: 15-data
+name_vn: Dữ liệu
 tier: 4
-description: "Phòng Data — analytics, ML, data infra"
+description: Phòng Data — analytics, ML, data infra
 agents:
-  - data-scientist
+- data-scientist
 default_speaker: data-scientist
 refs_folder: refs/
-depends_on: ["13-engineering"]
+depends_on:
+- 13-engineering
+aliases_vn:
+- Phòng Dữ liệu
+- Data Science
+- Data

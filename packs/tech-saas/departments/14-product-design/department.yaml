@@ -1,9 +1,14 @@
-code: "14-product-design"
-name_vn: "Product Design"
+code: 14-product-design
+name_vn: Product Design
 tier: 4
-description: "Phòng Product Design — UX/UI, research"
+description: Phòng Product Design — UX/UI, research
 agents:
-  - product-designer
+- product-designer
 default_speaker: product-designer
 refs_folder: refs/
-depends_on: ["09-product-tech"]
+depends_on:
+- 09-product-tech
+aliases_vn:
+- Phòng Thiết kế Sản phẩm
+- Design
+- UX

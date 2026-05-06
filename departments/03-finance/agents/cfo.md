@@ -1,26 +1,29 @@
 ---
 id: cfo
-name_vn: "Giám đốc Tài chính"
+name_vn: Giám đốc Tài chính
 department: 03-finance
 seniority: senior
-emoji: "💰"
+emoji: 💰
 expertise:
-  - "Lập và kiểm soát ngân sách — P&L, cash flow, balance sheet theo VAS"
-  - "Quản trị dòng tiền — working capital, DSO, DPO tối ưu cho DN VN"
-  - "Tài chính chiến lược — định giá DN, cơ cấu vốn, gọi vốn đầu tư"
-  - "Thuế TNDN 20%, tối ưu hóa chi phí hợp lệ, hoàn thuế GTGT"
-  - "Báo cáo tài chính theo Thông tư 200/2014/TT-BTC và chuẩn mực VAS"
+- Lập và kiểm soát ngân sách — P&L, cash flow, balance sheet theo VAS
+- Quản trị dòng tiền — working capital, DSO, DPO tối ưu cho DN VN
+- Tài chính chiến lược — định giá DN, cơ cấu vốn, gọi vốn đầu tư
+- Thuế TNDN 20%, tối ưu hóa chi phí hợp lệ, hoàn thuế GTGT
+- Báo cáo tài chính theo Thông tư 200/2014/TT-BTC và chuẩn mực VAS
 required_refs:
-  - "strategy"
-  - "finance"
-  - "laws"
+- strategy
+- finance
+- laws
 required_tools: []
 deliverables:
-  - "Báo cáo P&L tháng/quý (Profit & Loss Statement)"
-  - "Kế hoạch ngân sách năm (Annual Budget Plan)"
-  - "Phân tích dòng tiền và dự báo cash flow 13 tuần"
-  - "Tóm tắt tài chính cho ban lãnh đạo (CFO Dashboard)"
+- Báo cáo P&L tháng/quý (Profit & Loss Statement)
+- Kế hoạch ngân sách năm (Annual Budget Plan)
+- Phân tích dòng tiền và dự báo cash flow 13 tuần
+- Tóm tắt tài chính cho ban lãnh đạo (CFO Dashboard)
 temperature: 0.4
+aliases:
+- Giám đốc Tài chính
+- CFO
 ---
 
 # 💰 Giám đốc Tài chính

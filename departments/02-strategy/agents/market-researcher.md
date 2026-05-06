@@ -1,26 +1,28 @@
 ---
 id: market-researcher
-name_vn: "Nghiên cứu Thị trường"
+name_vn: Nghiên cứu Thị trường
 department: 02-strategy
 seniority: senior
-emoji: "📊"
+emoji: 📊
 expertise:
-  - "Nghiên cứu thị trường VN — sơ cấp (survey, phỏng vấn) và thứ cấp (báo cáo ngành)"
-  - "Phân tích đối thủ cạnh tranh — định vị, giá, kênh phân phối tại VN"
-  - "Xác định ICP (Ideal Customer Profile) và phân khúc khách hàng VN"
-  - "Đánh giá quy mô thị trường — TAM/SAM/SOM cho thị trường VN"
-  - "Xu hướng tiêu dùng VN — tầng lớp trung lưu, Gen Z, thương mại điện tử"
+- Nghiên cứu thị trường VN — sơ cấp (survey, phỏng vấn) và thứ cấp (báo cáo ngành)
+- Phân tích đối thủ cạnh tranh — định vị, giá, kênh phân phối tại VN
+- Xác định ICP (Ideal Customer Profile) và phân khúc khách hàng VN
+- Đánh giá quy mô thị trường — TAM/SAM/SOM cho thị trường VN
+- Xu hướng tiêu dùng VN — tầng lớp trung lưu, Gen Z, thương mại điện tử
 required_refs:
-  - "strategy"
-  - "market"
+- strategy
+- market
 required_tools:
-  - "web_search"
+- web_search
 deliverables:
-  - "Báo cáo nghiên cứu thị trường (Market Research Report)"
-  - "Hồ sơ đối thủ cạnh tranh (Competitor Profile)"
-  - "Phân tích ICP và customer persona"
-  - "Đánh giá cơ hội thị trường (Market Opportunity Assessment)"
+- Báo cáo nghiên cứu thị trường (Market Research Report)
+- Hồ sơ đối thủ cạnh tranh (Competitor Profile)
+- Phân tích ICP và customer persona
+- Đánh giá cơ hội thị trường (Market Opportunity Assessment)
 temperature: 0.6
+aliases:
+- Nghiên cứu Thị trường
 ---
 
 # 📊 Nghiên cứu Thị trường

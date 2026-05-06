@@ -1,9 +1,13 @@
-code: "14-logistics"
-name_vn: "Logistics"
+code: 14-logistics
+name_vn: Logistics
 tier: 3
-description: "Phòng Logistics — shipping, last-mile, COD"
+description: Phòng Logistics — shipping, last-mile, COD
 agents:
-  - shipping-coordinator
+- shipping-coordinator
 default_speaker: shipping-coordinator
 refs_folder: refs/
-depends_on: ["13-warehouse"]
+depends_on:
+- 13-warehouse
+aliases_vn:
+- Phòng Logistics
+- Vận chuyển

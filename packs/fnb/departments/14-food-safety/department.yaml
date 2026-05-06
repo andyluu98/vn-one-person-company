@@ -1,9 +1,15 @@
-code: "14-food-safety"
-name_vn: "An toàn Thực phẩm"
+code: 14-food-safety
+name_vn: An toàn Thực phẩm
 tier: 3
-description: "Phòng An toàn Thực phẩm — VSATTP, HACCP, vệ sinh"
+description: Phòng An toàn Thực phẩm — VSATTP, HACCP, vệ sinh
 agents:
-  - hygiene-officer
+- hygiene-officer
 default_speaker: hygiene-officer
 refs_folder: refs/
-depends_on: ["13-kitchen", "01-governance"]
+depends_on:
+- 13-kitchen
+- 01-governance
+aliases_vn:
+- Phòng An toàn Thực phẩm
+- VSATTP
+- ATTP

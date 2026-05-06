@@ -10,3 +10,8 @@ refs_folder: refs/
 depends_on: []
 debate_role:
   default: pro
+aliases_vn:
+- Phòng Pháp chế
+- Quản trị
+- Pháp lý
+- Governance

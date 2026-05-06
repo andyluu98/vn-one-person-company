@@ -1,11 +1,18 @@
-code: "13-kitchen"
-name_vn: "Bếp & Sản xuất"
+code: 13-kitchen
+name_vn: Bếp & Sản xuất
 tier: 3
-description: "Phòng Bếp — thiết kế menu, định lượng, food cost"
+description: Phòng Bếp — thiết kế menu, định lượng, food cost
 agents:
-  - head-chef
+- head-chef
 default_speaker: head-chef
 refs_folder: refs/
-depends_on: ["05-operations", "03-finance", "14-food-safety"]
+depends_on:
+- 05-operations
+- 03-finance
+- 14-food-safety
 debate_role:
   default: pro
+aliases_vn:
+- Phòng Bếp
+- Bếp
+- Kitchen

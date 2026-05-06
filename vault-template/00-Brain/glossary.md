@@ -1,6 +1,7 @@
 ---
 type: brain
 section: glossary
+aliases: ["Từ điển", "Thuật ngữ", "Glossary"]
 last_updated: YYYY-MM-DD
 ---
 # Từ điển thuật ngữ (auto-grown)

@@ -7,7 +7,7 @@ Run:
     python -m core.mcp_server          # stdio transport
     vn-os-mcp                          # via console_script (after install)
 
-Tools registered (7):
+Tools registered (8):
     vn_run         — Stage 1: brief → router → gap → clarify (PAUSE)
     vn_resume      — Stage 2: resume after CEO answers clarification
     vn_meeting     — Stage 3: research + meeting → 07-decision-report.md (Stop 1)
@@ -15,6 +15,7 @@ Tools registered (7):
     vn_execute     — Stage 5: render .docx/.xlsx into 03-Outputs/
     vn_status      — inspect vault (Brain summary + tasks)
     vn_onboard     — run onboard wizard creating new vault scaffold
+    vn_upgrade     — refresh existing vault với enriched prompts + aliases
 """
 from __future__ import annotations
 import re
@@ -27,6 +28,7 @@ from core.llm.providers import MCPSamplingProvider
 from core.obsidian.vault import ObsidianVault
 from core.onboard import onboard_vault
 from core.orchestrator.flow_controller import FlowController
+from core.upgrade import upgrade_vault
 
 
 mcp = FastMCP("vn-business-os")
@@ -185,6 +187,37 @@ def vn_onboard(vault: str, packs: list[str] | None = None) -> dict:
         vault_path=vault,
         packs=packs or [],
         init_git=True,
+    )
+
+
+@mcp.tool()
+def vn_upgrade(
+    vault: str,
+    refresh_agents: bool = True,
+    refresh_dept_yaml: bool = True,
+    refresh_brain_aliases: bool = True,
+    regenerate_hubs: bool = False,
+) -> dict:
+    """Upgrade vault hiện có lên phiên bản plugin mới.
+
+    Refresh agent prompts, department YAML, Brain aliases. KHÔNG động đến
+    Brain content (CEO đã điền), Tasks, Outputs.
+
+    Args:
+        vault: Đường dẫn vault hiện có
+        refresh_agents: Ghi đè agent .md files với enriched prompts mới
+        refresh_dept_yaml: Ghi đè department.yaml (aliases_vn, routing rules)
+        refresh_brain_aliases: Inject aliases vào frontmatter Brain files
+        regenerate_hubs: Xoá index.md cũ + tạo lại (mặc định KHÔNG)
+
+    Returns dict với count file refreshed + warnings.
+    """
+    return upgrade_vault(
+        vault_path=vault,
+        refresh_agents=refresh_agents,
+        refresh_dept_yaml=refresh_dept_yaml,
+        refresh_brain_aliases=refresh_brain_aliases,
+        regenerate_hubs=regenerate_hubs,
     )
 
 

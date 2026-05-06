@@ -1,7 +1,7 @@
 """Test MCP server tool registration + basic invocation with mocked Context.
 
 Verifies:
-- module imports + 7 tools registered with FastMCP
+- module imports + 8 tools registered with FastMCP
 - vn_status reads Brain summary from fixture vault (no LLM)
 - vn_run routes LLM calls via MCPSamplingProvider → ctx.session.create_message
 """
@@ -20,7 +20,7 @@ FIXTURE = REPO / "tests" / "fixtures" / "techco-vault"
 
 
 def test_mcp_server_imports():
-    """Server module imports + all 7 tool fns exposed."""
+    """Server module imports + all 8 tool fns exposed."""
     from core.mcp_server import (
         mcp,
         vn_run,
@@ -30,12 +30,13 @@ def test_mcp_server_imports():
         vn_execute,
         vn_status,
         vn_onboard,
+        vn_upgrade,
     )
     assert mcp.name == "vn-business-os"
 
 
-def test_mcp_server_has_7_tools():
-    """FastMCP.list_tools() returns the 7 registered tools."""
+def test_mcp_server_has_8_tools():
+    """FastMCP.list_tools() returns the 8 registered tools."""
     from core.mcp_server import mcp
 
     tools = asyncio.run(mcp.list_tools())
@@ -48,6 +49,7 @@ def test_mcp_server_has_7_tools():
         "vn_execute",
         "vn_status",
         "vn_onboard",
+        "vn_upgrade",
     ])
 
 

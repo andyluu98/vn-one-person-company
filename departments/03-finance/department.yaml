@@ -21,3 +21,8 @@ routing_rules:
   - phân tích
   - báo cáo tc
   agent: financial-analyst
+aliases_vn:
+- Phòng Tài chính
+- Tài chính
+- Kế toán
+- Finance

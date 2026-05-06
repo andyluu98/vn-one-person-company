@@ -54,6 +54,10 @@ def _write_brain_hub(
     if target.exists():
         return False
     lines = [
+        "---",
+        "type: hub",
+        'aliases: ["Bộ Não", "Brain", "Trung tâm Tri thức", "Hub Brain"]',
+        "---",
         "# 🧠 Brain — Trung tâm tri thức",
         "",
         "Hub điều hướng toàn bộ Brain files và 12+ phòng ban.",
@@ -78,8 +82,16 @@ def _write_dept_hub(d: Path, meta: dict, brain_stems: list[str]) -> bool:
     name_vn = meta.get("name_vn", d.name)
     agents = meta.get("agents", []) or []
     depends_on = meta.get("depends_on", []) or []
+    aliases_extra = meta.get("aliases_vn", []) or []
+
+    aliases = [name_vn] + [a for a in aliases_extra if a != name_vn]
+    aliases_inline = "[" + ", ".join(f'"{a}"' for a in aliases) + "]"
 
     lines = [
+        "---",
+        "type: hub",
+        f"aliases: {aliases_inline}",
+        "---",
         f"# 🏢 {name_vn}",
         f"_Mã phòng ban: `{d.name}`_",
         "",

@@ -22,3 +22,7 @@ routing_rules:
   - prospect
   - tìm khách
   agent: sdr
+aliases_vn:
+- Phòng Kinh doanh
+- Kinh doanh
+- Sales

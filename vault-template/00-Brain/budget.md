@@ -1,6 +1,7 @@
 ---
 type: brain
 section: budget
+aliases: ["Ngân sách", "Ngân sách năm", "Budget"]
 last_updated: YYYY-MM-DD
 ---
 # Ngân sách

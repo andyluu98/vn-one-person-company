@@ -1,6 +1,7 @@
 ---
 type: brain
 section: laws
+aliases: ["Luật", "Pháp lý", "Quy định", "Pháp luật"]
 last_updated: YYYY-MM-DD
 ---
 # Luật & Quy định liên quan DN

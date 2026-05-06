@@ -1,6 +1,7 @@
 ---
 type: brain
 section: decisions
+aliases: ["Nhật ký Quyết định", "Quyết định", "Lịch sử Quyết định"]
 last_updated: YYYY-MM-DD
 ---
 # Nhật ký quyết định (append-only)
