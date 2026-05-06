@@ -18,16 +18,14 @@ Tools registered (7):
 """
 from __future__ import annotations
 import re
-import subprocess
-import sys
 from pathlib import Path
-from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
 
 from core.brain.reader import BrainReader
 from core.llm.providers import MCPSamplingProvider
 from core.obsidian.vault import ObsidianVault
+from core.onboard import onboard_vault
 from core.orchestrator.flow_controller import FlowController
 
 
@@ -171,24 +169,23 @@ def vn_status(vault: str) -> dict:
 
 
 @mcp.tool()
-def vn_onboard(vault: str, non_interactive: bool = True) -> dict:
-    """Run onboard wizard creating new vault scaffold.
+def vn_onboard(vault: str, packs: list[str] | None = None) -> dict:
+    """Create vault scaffold for new company.
 
-    With non_interactive=True (default for MCP), skips prompts:
-    creates default vault scaffold + git init.
+    Calls core.onboard.onboard_vault directly (no subprocess) so MCP request
+    thread is not blocked — fixes Claude Desktop timeout issue.
+
+    Args:
+        vault: Path where vault will be created
+        packs: Optional list of pack codes to install (fnb, retail, tech-saas)
+
+    Returns dict with steps performed, packs installed, warnings, next_steps.
     """
-    repo = Path(__file__).parent.parent
-    cmd = [sys.executable, str(repo / "scripts" / "onboard.py"), "--vault", vault]
-    if non_interactive:
-        cmd.append("--non-interactive")
-
-    proc = subprocess.run(cmd, capture_output=True, text=True)
-    return {
-        "vault": vault,
-        "exit_code": proc.returncode,
-        "stdout": proc.stdout,
-        "stderr": proc.stderr,
-    }
+    return onboard_vault(
+        vault_path=vault,
+        packs=packs or [],
+        init_git=True,
+    )
 
 
 def main() -> None:
