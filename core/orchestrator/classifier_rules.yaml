@@ -1,0 +1,37 @@
+SIMPLE:
+  description: "Task đơn giản, không cần họp, 1-2 agent"
+  keywords:
+    - "soạn jd"
+    - "viết jd"
+    - "hợp đồng mẫu"
+    - "biên bản"
+    - "đơn từ"
+    - "thư mời"
+    - "công văn"
+  max_departments: 2
+
+COMPLEX:
+  description: "Task phức tạp, cần họp 3-5 phòng debate"
+  keywords:
+    - "chiến dịch"
+    - "kế hoạch"
+    - "định giá"
+    - "tuyển dụng"
+    - "ra mắt sản phẩm"
+    - "mở rộng"
+    - "campaign"
+    - "ngân sách"
+  max_departments: 5
+
+STRATEGIC:
+  description: "Task chiến lược, cần CEO duyệt giữa chừng"
+  keywords:
+    - "gọi vốn"
+    - "m&a"
+    - "mở chi nhánh"
+    - "pivot"
+    - "exit"
+    - "chuyển hướng"
+    - "tái cấu trúc"
+    - "ipo"
+  min_departments: 5
