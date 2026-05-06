@@ -126,9 +126,15 @@ def execute_cmd(task_folder):
 
 
 @main.command()
-def onboard():
-    """Wizard tạo vault mới."""
-    console.print(f"[yellow]TODO Phase 6:[/] onboard wizard")
+@click.option("--vault", type=click.Path(), required=True)
+def onboard(vault):
+    """Wizard tạo vault mới cho DN."""
+    import subprocess, sys
+    from pathlib import Path
+    repo = Path(__file__).parent.parent
+    subprocess.run(
+        [sys.executable, str(repo / "scripts" / "onboard.py"), "--vault", vault]
+    )
 
 
 if __name__ == "__main__":

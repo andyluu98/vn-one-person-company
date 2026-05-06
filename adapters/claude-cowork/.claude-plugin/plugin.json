@@ -1,0 +1,13 @@
+{
+  "name": "vn-business-os",
+  "version": "0.1.0",
+  "description": "AI agent OS cho doanh nghiệp Việt Nam — debate giữa các phòng ban, sinh tài liệu .docx/.xlsx tuân thủ luật VN. Powered by Python + LangGraph backend.",
+  "author": {
+    "email": "ltuananhsd@gmail.com"
+  },
+  "credits": {
+    "templates_vn": "adapted from business-builder.plugin",
+    "debate_engine_pattern": "TradingAgents (TauricResearch)"
+  },
+  "keywords": ["business", "vietnam", "agents", "debate", "langgraph"]
+}
