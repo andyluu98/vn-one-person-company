@@ -1,59 +1,174 @@
 ---
 name: vn-business-os
-description: AI agent OS cho doanh nghiệp Việt Nam. Chat tự nhiên với CEO, gọi Python CLI điều phối các phòng ban (agents) họp bàn, debate, sinh báo cáo + tài liệu .docx/.xlsx tuân thủ luật VN. Use when user wants to manage business operations, create campaigns, generate JDs, contracts, plans, or any business documentation in Vietnamese context.
+description: AI agent OS cho doanh nghiệp Việt Nam. Sử dụng MCP tools (vn_run, vn_meeting, vn_approve, vn_execute, vn_status, vn_resume, vn_onboard) để điều phối các phòng ban (AI agents) họp bàn debate, sinh báo cáo + tài liệu .docx/.xlsx tuân thủ luật VN. Activate when user asks about Vietnamese business operations, campaigns, JDs, contracts, plans, or any business documentation.
 ---
 
-# VN Business OS — Claude Code Skill
+# VN Business OS — Claude Skill
 
-Khi CEO chat với task DN, skill này:
+> AI Operating System cho doanh nghiệp Việt Nam.
+> CEO chat tự nhiên → các phòng ban (AI agents) họp bàn debate → sinh tài liệu.
 
-1. Phát hiện vault VN Business OS (folder có `00-Brain/`)
-2. Chuyển brief sang Python CLI: `vn-os run --brief "<text>" --vault <path>`
-3. Đọc kết quả từ Obsidian vault để báo cáo cho CEO
-4. CEO duyệt qua các stop point (clarification, decision, execute)
+Skill này dùng **7 MCP tools** từ server `vn-business-os`. Tất cả LLM thinking chạy qua **subscription Claude Desktop / Code** (không cần ANTHROPIC_API_KEY).
 
-## Khi user nói các câu sau → trigger skill
+## Khi nào activate
 
+Người dùng VN gõ các câu sau → trigger skill:
 - "Tạo chiến dịch ..."
 - "Soạn JD ..."
 - "Lập kế hoạch ..."
 - "Tính ngân sách ..."
-- "Đóng gói doanh nghiệp"
-- "Hệ thống hóa tài liệu DN"
 - "Phân tích đối thủ ..."
+- "Setup doanh nghiệp ..."
+- "Onboard công ty mới"
+- "Đóng gói tài liệu DN"
+- "Hệ thống hoá quy trình"
 
-## Workflow
+## Cài đặt 1 lần (CEO làm)
 
-### Bước 1: Verify vault
 ```bash
-ls $VAULT/00-Brain/strategy.md
-```
-Nếu KHÔNG có → đề xuất chạy `vn-os onboard --vault $VAULT`.
-
-### Bước 2: Run task
-```bash
-vn-os run --brief "<user's brief>" --vault $VAULT
-```
-Output sẽ tạo folder `02-Tasks/<timestamp>-<slug>/` và pause ở clarification.
-
-### Bước 3: Đọc clarification, hỏi CEO
-Đọc `02-Tasks/<task>/03-clarification.md`, hỏi CEO chọn từng câu, edit file (tick checkbox), rồi:
-```bash
-vn-os meeting <task-folder>
+pip install vn-business-os         # hoặc pipx install
+vn-os install-mcp                  # tự edit claude_desktop_config.json
+# Restart Claude Desktop
 ```
 
-### Bước 4: Sau meeting, đọc 07-decision-report.md
-Tóm tắt cho CEO. Hỏi: approve/revise/reject.
+Sau bước này, MCP server `vn-business-os` luôn sẵn sàng trong Claude Desktop. Skill này tự kích hoạt khi cần.
 
-### Bước 5: Sau approve
-```bash
-vn-os approve <task-folder>
-vn-os execute <task-folder>
+## 7 MCP Tools
+
+| Tool | Khi dùng |
+|---|---|
+| `vn_status(vault)` | Verify vault tồn tại + đọc Brain summary |
+| `vn_onboard(vault)` | Tạo vault scaffold mới (lần đầu) |
+| `vn_run(brief, vault)` | Stage 1: brief → router → gap → clarification |
+| `vn_resume(task_folder)` | Stage 2: resume sau khi CEO trả lời clarification |
+| `vn_meeting(task_folder, departments)` | Stage 3: research + meeting → 07-decision-report.md |
+| `vn_approve(task_folder)` | Stage 4: CEO duyệt → 08-execution-plan.md |
+| `vn_execute(task_folder)` | Stage 5: render .docx/.xlsx vào 03-Outputs/ |
+
+## Workflow chuẩn
+
+### Bước 0: Detect vault + Brain
+Khi CEO mention task DN, đọc CWD hoặc hỏi vault path. Gọi `vn_status(vault)`:
+
 ```
+✓ vault exists, ICP="SME 5-50", products=3, depts=["07-marketing","03-finance",...]
+```
+
+Nếu vault chưa có Brain → gọi `vn_onboard(vault)` để tạo scaffold, hướng dẫn CEO điền 00-Brain/.
+
+### Bước 1: Run task
+```
+vn_run(brief="Tạo chiến dịch QC nhắm khách thu nhập 50tr+", vault="~/my-vault")
+→ {"stage": "PAUSE_CLARIFICATION", "task_folder": "~/my-vault/02-Tasks/<ts>-tao-chien-dich/"}
+```
+
+### Bước 2: Đọc clarification + hỏi CEO
+Đọc `<task_folder>/03-clarification.md` (markdown có checkbox). Format câu hỏi cho CEO bằng tiếng Việt, kèm citation Brain.
+
+CEO trả lời → edit file (tick `[x]` lựa chọn) bằng filesystem MCP hoặc text editing.
+
+### Bước 3: Resume sau khi CEO answer
+```
+vn_resume(task_folder="...")
+→ {"stage": "PAUSE_DECISION_REPORT", ...}
+```
+
+### Bước 4: Run meeting (debate engine)
+```
+vn_meeting(task_folder="...")
+→ Stage 3 chạy: research phase + perspectives parallel + Pro/Con debate (2-3 round) + Growth/Cautious/Balanced debate + Synthesizer
+→ Tạo 03b-research-findings.md, 04-meeting-r1-perspectives.md, 05-meeting-r2-debate.md, 06-meeting-r3-perspectives.md, 07-decision-report.md
+→ {"stage": "PAUSE_DECISION_REPORT"}
+```
+
+### Bước 5: Đọc decision report + summary cho CEO
+Đọc `<task_folder>/07-decision-report.md`. Báo cáo có:
+- TL;DR (3-5 dòng đầu)
+- Khuyến nghị (GO / GO with revisions / NO-GO)
+- BLOCKERS (việc cần làm trước launch)
+- KPI gates
+- Câu hỏi cần CEO quyết
+
+Tóm tắt cho CEO bằng tiếng Việt, hỏi: approve / revise / reject.
+
+### Bước 6: Approve → execution plan
+```
+vn_approve(task_folder="...")
+→ Tạo 08-execution-plan.md (Stop 2)
+```
+
+### Bước 7: Execute → sinh files
+```
+vn_execute(task_folder="...")
+→ Render .docx/.xlsx vào <vault>/03-Outputs/<task_name>/
+```
+
+## Onboard DN mới (lần đầu setup)
+
+Khi CEO chưa có vault hoặc nói "setup DN mới":
+
+1. Hỏi CEO: industry (F&B / Retail / Tech-SaaS / khác), tên DN, vault path
+2. Gọi `vn_onboard(vault="~/vn-os/<slug>")`
+3. Hướng dẫn CEO mở `<vault>/00-Brain/` điền:
+   - `strategy.md` — vision, ICP, mục tiêu năm
+   - `products.md` — sản phẩm, giá, margin
+   - `budget.md` — ngân sách
+   - `headcount.md` — phòng ban active
+   - `state.md` — KPI hiện tại
+4. Sau khi điền xong, gọi `vn_status(vault)` verify.
 
 ## Quan trọng
 
-- LUÔN dùng tiếng Việt khi giao tiếp CEO
-- LUÔN cite file Obsidian khi trích thông tin (vd: "theo 00-Brain/strategy.md")
-- KHÔNG bịa nội dung — chỉ summary từ output Python CLI
-- Nếu Python CLI lỗi → báo CEO + suggest debug command
+### Dùng tiếng Việt
+- LUÔN giao tiếp với CEO bằng tiếng Việt
+- Định nghĩa thuật ngữ ngành lần đầu xuất hiện
+- Format CEO-friendly: ngắn, có TL;DR, không jargon nặng
+
+### Cite nguồn
+- LUÔN cite file Obsidian khi trích thông tin (vd: "theo `00-Brain/strategy.md`")
+- KHÔNG bịa nội dung — chỉ summary từ output MCP tools
+
+### Error handling
+- MCP tool error → báo CEO + suggest fix:
+  - Vault not found → `vn_onboard()` trước
+  - Brain incomplete → hướng dẫn CEO điền
+  - Subscription rate limit → chờ + retry hoặc dùng lite mode (1 round debate)
+
+### Subscription quota
+- 1 task COMPLEX ≈ 30-40 sampling calls
+- Pro plan ≈ 45 msg/5h → 1 task gần kịch quota
+- Max plan ≈ 225 msg/5h → 6-7 task/5h
+- Nếu CEO chạy nhiều task liên tiếp + gặp limit → đề xuất chia thời gian hoặc upgrade
+
+### File-based state
+- Tất cả task progress lưu trong `<vault>/02-Tasks/<task-folder>/`
+- Có thể dừng giữa session, mở session sau resume bằng `vn_resume(task_folder)` hoặc `vn_meeting(task_folder)`
+
+## Workflow case mẫu
+
+CEO: "Tạo chiến dịch QC nhắm khách thu nhập 50tr+ NS 500tr"
+
+```
+1. vn_status("~/techco-vault") → ✓ Brain loaded
+2. vn_run(brief, vault) → PAUSE_CLARIFICATION, task_folder=...
+3. Read 03-clarification.md → 2 câu hỏi (Pivot vs Test, Tạo agent vs Outsource)
+4. Show CEO 2 câu, get answers
+5. Edit 03-clarification.md (tick [x])
+6. vn_resume(task_folder) → PAUSE_DECISION_REPORT
+7. vn_meeting(task_folder) → all 5 phòng debate, 07-decision-report.md ready
+8. Read decision report, summary cho CEO (TL;DR + khuyến nghị + blockers)
+9. CEO: "Approve plan này"
+10. vn_approve(task_folder) → 08-execution-plan.md
+11. vn_execute(task_folder) → .docx/.xlsx vào 03-Outputs/
+12. Show CEO link đến outputs folder.
+```
+
+Total: ~8-15 phút cho 1 task COMPLEX. CEO ngồi máy ~5 phút (trả lời clarification + duyệt report).
+
+---
+
+## Credits
+
+- 192 templates VN trong `templates-vn/` adapted from `business-builder.plugin`
+- Engine debate pattern adapted from [TradingAgents](https://github.com/TauricResearch/TradingAgents)
+- Roles reference từ [agency-agents](https://github.com/msitarzewski/agency-agents)
