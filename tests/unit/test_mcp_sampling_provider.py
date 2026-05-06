@@ -82,3 +82,65 @@ def test_dict_response_shape():
     p = MCPSamplingProvider(server)
     result = p.complete([{"role": "user", "content": "x"}])
     assert "dict shape" in result
+
+
+def test_system_role_extracted_to_system_prompt_kwarg():
+    """MCP SamplingMessage.role chỉ user|assistant.
+
+    Provider phải tách role='system' thành kwarg system_prompt riêng để
+    SamplingMessage construction không fail validation.
+    """
+    server = MagicMock()
+    fake = MagicMock()
+    fake.content = [MagicMock(text="ok")]
+    server.create_message.return_value = fake
+
+    p = MCPSamplingProvider(server)
+    p.complete([
+        {"role": "system", "content": "Bạn là CFO VN."},
+        {"role": "user", "content": "Hỏi về P&L"},
+    ])
+
+    call = server.create_message.call_args
+    kwargs = call.kwargs if call.kwargs else {}
+
+    assert kwargs.get("system_prompt") == "Bạn là CFO VN."
+
+    msgs = kwargs.get("messages")
+    assert len(msgs) == 1
+    role = msgs[0].role if hasattr(msgs[0], "role") else msgs[0]["role"]
+    assert role == "user"
+
+
+def test_multiple_system_messages_joined(monkeypatch):
+    server = MagicMock()
+    fake = MagicMock()
+    fake.content = [MagicMock(text="ok")]
+    server.create_message.return_value = fake
+
+    p = MCPSamplingProvider(server)
+    p.complete([
+        {"role": "system", "content": "Phần 1"},
+        {"role": "system", "content": "Phần 2"},
+        {"role": "user", "content": "Câu hỏi"},
+    ])
+
+    call = server.create_message.call_args
+    kwargs = call.kwargs if call.kwargs else {}
+    sp = kwargs.get("system_prompt", "")
+    assert "Phần 1" in sp
+    assert "Phần 2" in sp
+
+
+def test_no_system_prompt_kwarg_when_only_user_messages():
+    server = MagicMock()
+    fake = MagicMock()
+    fake.content = [MagicMock(text="ok")]
+    server.create_message.return_value = fake
+
+    p = MCPSamplingProvider(server)
+    p.complete([{"role": "user", "content": "Hi"}])
+
+    call = server.create_message.call_args
+    kwargs = call.kwargs if call.kwargs else {}
+    assert "system_prompt" not in kwargs

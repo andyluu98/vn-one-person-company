@@ -63,22 +63,45 @@ class MCPSamplingProvider:
     def complete(self, messages: list[dict], model: str | None = None) -> str:
         """Send sampling request via MCP, return response text.
 
-        Converts dict messages to MCP `SamplingMessage` objects when the real SDK
-        is available; otherwise passes raw dicts (test path).
+        MCP SamplingMessage chỉ chấp nhận role 'user'/'assistant' — system message
+        phải tách vào kwarg `system_prompt` riêng. Hàm này tự gộp & tách.
         """
-        sampling_messages, model_prefs = self._build_request_payload(messages, model)
-
-        result = self.server.create_message(
-            messages=sampling_messages,
-            model_preferences=model_prefs,
-            max_tokens=4096,
+        system_prompt, conv_messages = self._split_system(messages)
+        sampling_messages, model_prefs = self._build_request_payload(
+            conv_messages, model
         )
+
+        kwargs: dict[str, Any] = {
+            "messages": sampling_messages,
+            "model_preferences": model_prefs,
+            "max_tokens": 4096,
+        }
+        if system_prompt:
+            kwargs["system_prompt"] = system_prompt
+
+        result = self.server.create_message(**kwargs)
 
         # ServerSession.create_message is async — auto-await if needed.
         if inspect.isawaitable(result):
             result = self._run_sync(result)
 
         return self._extract_text(result)
+
+    @staticmethod
+    def _split_system(messages: list[dict]) -> tuple[str, list[dict]]:
+        """Tách messages có role='system' thành system_prompt string + remaining.
+
+        Nếu nhiều system messages → join bằng "\n\n". Đảm bảo conv_messages chỉ
+        chứa user/assistant.
+        """
+        system_parts: list[str] = []
+        rest: list[dict] = []
+        for m in messages:
+            if m.get("role") == "system":
+                system_parts.append(str(m.get("content", "")))
+            else:
+                rest.append(m)
+        return "\n\n".join(system_parts), rest
 
     def _build_request_payload(
         self, messages: list[dict], model: str | None
