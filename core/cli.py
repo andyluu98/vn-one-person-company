@@ -75,6 +75,57 @@ def resume(task_folder):
 
 
 @main.command()
+@click.argument("task_folder", type=click.Path(exists=True))
+def meeting(task_folder):
+    """Sau khi CEO trả lời clarification → run meeting (Stop 1)."""
+    from pathlib import Path
+    import re
+    from core.orchestrator.flow_controller import FlowController, FlowStage
+    from core.llm.providers import get_default_provider
+
+    folder = Path(task_folder)
+    fc = FlowController(vault_root=folder.parent.parent, llm=get_default_provider())
+
+    routing_md = (folder / "01-routing.md").read_text(encoding="utf-8")
+    m = re.search(r"\*\*Departments:\*\* (.+)", routing_md)
+    if not m:
+        console.print("[red]✗ Cannot find Departments line in 01-routing.md[/]")
+        return
+    depts = [d.strip() for d in m.group(1).split(",")]
+
+    result = fc.run_meeting(folder, departments=depts)
+    console.print(f"[green]→ {result.stage.value}[/]: {result.message}")
+
+
+@main.command()
+@click.argument("task_folder", type=click.Path(exists=True))
+def approve(task_folder):
+    """CEO duyệt decision report → sinh execution plan."""
+    from pathlib import Path
+    from core.orchestrator.flow_controller import FlowController
+    from core.llm.providers import get_default_provider
+
+    folder = Path(task_folder)
+    fc = FlowController(vault_root=folder.parent.parent, llm=get_default_provider())
+    result = fc.approve_decision(folder)
+    console.print(f"[green]{result.message}[/]")
+
+
+@main.command(name="execute")
+@click.argument("task_folder", type=click.Path(exists=True))
+def execute_cmd(task_folder):
+    """CEO duyệt execute → sinh .docx/.xlsx vào 03-Outputs/."""
+    from pathlib import Path
+    from core.orchestrator.flow_controller import FlowController
+    from core.llm.providers import get_default_provider
+
+    folder = Path(task_folder)
+    fc = FlowController(vault_root=folder.parent.parent, llm=get_default_provider())
+    result = fc.execute(folder)
+    console.print(f"[green]→ DONE[/] {result.message}")
+
+
+@main.command()
 def onboard():
     """Wizard tạo vault mới."""
     console.print(f"[yellow]TODO Phase 6:[/] onboard wizard")
