@@ -16,7 +16,7 @@
 
 | # | Phase | Mục tiêu | Status |
 |---|---|---|:-:|
-| 1 | [Foundation](phase-01-foundation.md) | Repo skeleton + Brain layer + 13 dept stubs + vendor 191 template | ⏳ |
+| 1 | [Foundation](phase-01-foundation.md) | Repo skeleton + Brain layer + 12 dept stubs + vendor 191 template | ⏳ |
 | 2 | [Debate Engine](phase-02-debate-engine.md) | Bóc meeting_graph từ TradingAgents → neutral + checkpointer | ⏳ |
 | 3 | [Orchestrator + Brain-first](phase-03-orchestrator-brain-first.md) | Router + Gap analyzer + Clarifier + Flow controller (2 stops) | ⏳ |
 | 4 | [Tools + Translator](phase-04-tools-translator.md) | 6 tool live research + translator (jargon + TL;DR) | ⏳ |
@@ -44,7 +44,7 @@
 
 Xem chi tiết trong từng phase. Tóm tắt:
 - `core/` — Python engine (~4800 LoC)
-- `departments/` — 13 phòng core (YAML + agent .md)
+- `departments/` — 12 phòng core (+ pack-specific 13-XX) (YAML + agent .md)
 - `packs/` — 3 industry pack
 - `templates-vn/` — 191 template vendored từ bb-plugin
 - `vault-template/` — Obsidian scaffold
@@ -58,7 +58,7 @@ Xem chi tiết trong từng phase. Tóm tắt:
 - [ ] `pip install -e .` work Win/Mac/Linux
 - [ ] Wizard sinh vault valid
 - [ ] Test case B (chiến dịch QC) chạy E2E < 25 phút, < $2
-- [ ] 13 phòng core có agents thật
+- [ ] 12 phòng core (+ pack-specific 13-XX) có agents thật
 - [ ] 3 pack (F&B, Retail, Tech-SaaS) chạy được test riêng
 - [ ] BYOT demo work
 - [ ] 6 RULES enforced + có test

@@ -1,7 +1,7 @@
 """Load config from .vncoderc or vncode-config.yaml."""
 from __future__ import annotations
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 import os
 import yaml
 from pydantic import BaseModel, Field
@@ -12,6 +12,10 @@ class MeetingConfig(BaseModel):
     max_debate_rounds: int = 2
     max_perspective_debate_rounds: int = 1
     total_max: int = 5
+    # P1.4: opt-in LangGraph checkpointer cho crash recovery mid-meeting.
+    # Default OFF vì SqliteSaver có incompatibilities với một số versions.
+    # Khi enable, checkpoints lưu vào ~/.vn-business-os/checkpoints.db.
+    use_checkpointer: bool = False
 
 
 class LLMConfig(BaseModel):
@@ -22,10 +26,19 @@ class LLMConfig(BaseModel):
     max_cost_usd_per_task: float = 2.0
 
 
+# translator_mode controls how far the TranslatorPipeline is applied:
+#   "off"              — không simplify bất kỳ output nào
+#   "final_only"       — chỉ apply cho final decision report (default, giữ behavior cũ)
+#   "all_intermediate" — apply cho mọi output: perspectives, pro/con, final report
+TranslatorMode = Literal["off", "final_only", "all_intermediate"]
+
+
 class Config(BaseModel):
     vault_path: Optional[str] = None
     meeting: MeetingConfig = Field(default_factory=MeetingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    # P1.6: translator scope — default "final_only" giữ behavior cũ
+    translator_mode: TranslatorMode = "final_only"
 
 
 KNOWN_API_KEYS = [

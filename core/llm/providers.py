@@ -6,6 +6,11 @@ import os
 from typing import Any, Protocol, runtime_checkable
 
 
+async def _wrap_with_timeout(coro: Any, timeout: float) -> Any:
+    """Wrap coroutine với asyncio timeout. Raises asyncio.TimeoutError nếu hết hạn."""
+    return await asyncio.wait_for(coro, timeout=timeout)
+
+
 @runtime_checkable
 class LLMProvider(Protocol):
     name: str
@@ -52,20 +57,70 @@ class MCPSamplingProvider:
     """
     name = "mcp-sampling"
 
-    def __init__(self, mcp_server: Any, default_model: str = "claude-sonnet-4-6"):
+    def __init__(
+        self,
+        mcp_server: Any,
+        default_model: str = "claude-sonnet-4-6",
+        max_retries: int = 3,
+        timeout_seconds: float = 120.0,
+        retry_initial_delay: float = 1.0,
+    ):
         """
         mcp_server: object exposing `create_message(...)` — real MCP `ServerSession`
                     or a duck-typed compatible object (mock-friendly for testing).
+        max_retries: retries cho transient errors (rate limit, timeout, network)
+        timeout_seconds: hard timeout cho mỗi sampling call
+        retry_initial_delay: backoff delay đầu tiên (sec); double mỗi retry
         """
         self.server = mcp_server
         self.default_model = default_model
+        self.max_retries = max_retries
+        self.timeout_seconds = timeout_seconds
+        self.retry_initial_delay = retry_initial_delay
+
+    @staticmethod
+    def _is_retryable(exc: BaseException) -> bool:
+        """Xác định exception nào nên retry (rate limit / timeout / transient network).
+
+        Nhận diện qua tên class hoặc message — cover Anthropic, MCP, asyncio, httpx.
+        """
+        name = type(exc).__name__.lower()
+        msg = str(exc).lower()
+        if "ratelimit" in name or "429" in msg or "rate limit" in msg:
+            return True
+        if "timeout" in name or "timeout" in msg or "timed out" in msg:
+            return True
+        if "connection" in name or "connection" in msg:
+            return True
+        if "overloaded" in msg or "503" in msg or "502" in msg:
+            return True
+        return False
 
     def complete(self, messages: list[dict], model: str | None = None) -> str:
-        """Send sampling request via MCP, return response text.
+        """Send sampling request via MCP với retry-with-backoff + timeout.
 
         MCP SamplingMessage chỉ chấp nhận role 'user'/'assistant' — system message
-        phải tách vào kwarg `system_prompt` riêng. Hàm này tự gộp & tách.
+        tách vào kwarg `system_prompt`. Retry cho rate limit/timeout/network errors.
         """
+        last_exc: BaseException | None = None
+        delay = self.retry_initial_delay
+
+        for attempt in range(self.max_retries + 1):
+            try:
+                return self._do_complete(messages, model)
+            except Exception as e:  # noqa: BLE001
+                last_exc = e
+                if attempt >= self.max_retries or not self._is_retryable(e):
+                    raise
+                import time
+                time.sleep(delay)
+                delay *= 2  # exponential backoff
+
+        # Unreachable — but Python static analysis happier with explicit raise
+        raise last_exc or RuntimeError("MCPSamplingProvider.complete failed")
+
+    def _do_complete(self, messages: list[dict], model: str | None) -> str:
+        """1 attempt — không retry, có timeout."""
         system_prompt, conv_messages = self._split_system(messages)
         sampling_messages, model_prefs = self._build_request_payload(
             conv_messages, model
@@ -81,11 +136,25 @@ class MCPSamplingProvider:
 
         result = self.server.create_message(**kwargs)
 
-        # ServerSession.create_message is async — auto-await if needed.
+        # ServerSession.create_message is async — auto-await với timeout.
         if inspect.isawaitable(result):
-            result = self._run_sync(result)
+            result = self._run_sync_with_timeout(result, self.timeout_seconds)
 
         return self._extract_text(result)
+
+    @staticmethod
+    def _run_sync_with_timeout(coro: Any, timeout: float) -> Any:
+        """Run coroutine sync với hard timeout."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    future = pool.submit(asyncio.run, _wrap_with_timeout(coro, timeout))
+                    return future.result()
+        except RuntimeError:
+            pass
+        return asyncio.run(_wrap_with_timeout(coro, timeout))
 
     @staticmethod
     def _split_system(messages: list[dict]) -> tuple[str, list[dict]]:

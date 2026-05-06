@@ -1,4 +1,4 @@
-"""Central registry: load 13 dept + agents từ /departments + /packs."""
+"""Central registry: load 12 core dept + N pack-specific dept + agents."""
 from __future__ import annotations
 from pathlib import Path
 from core.agents.department import Department, DepartmentLoader

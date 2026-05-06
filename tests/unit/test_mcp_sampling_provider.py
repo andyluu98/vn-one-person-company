@@ -144,3 +144,50 @@ def test_no_system_prompt_kwarg_when_only_user_messages():
     call = server.create_message.call_args
     kwargs = call.kwargs if call.kwargs else {}
     assert "system_prompt" not in kwargs
+
+
+def test_retry_on_rate_limit_error():
+    """RateLimitError → should retry, succeed on 2nd attempt."""
+    class RateLimitError(Exception):
+        pass
+
+    server = MagicMock()
+    fake = MagicMock()
+    fake.content = [MagicMock(text="success after retry")]
+    server.create_message.side_effect = [RateLimitError("429"), fake]
+
+    p = MCPSamplingProvider(server, retry_initial_delay=0.01)
+    result = p.complete([{"role": "user", "content": "x"}])
+
+    assert "success after retry" in result
+    assert server.create_message.call_count == 2
+
+
+def test_no_retry_on_non_retryable():
+    """Generic Exception (not rate limit/timeout) → no retry."""
+    server = MagicMock()
+    server.create_message.side_effect = ValueError("bad request")
+
+    p = MCPSamplingProvider(server, retry_initial_delay=0.01)
+    try:
+        p.complete([{"role": "user", "content": "x"}])
+        assert False, "should have raised"
+    except ValueError:
+        pass
+
+    assert server.create_message.call_count == 1
+
+
+def test_retry_gives_up_after_max_retries():
+    """Always-failing → fail after max_retries+1 attempts."""
+    server = MagicMock()
+    server.create_message.side_effect = TimeoutError("timed out")
+
+    p = MCPSamplingProvider(server, max_retries=2, retry_initial_delay=0.01)
+    try:
+        p.complete([{"role": "user", "content": "x"}])
+        assert False, "should have raised"
+    except TimeoutError:
+        pass
+
+    assert server.create_message.call_count == 3

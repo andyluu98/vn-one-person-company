@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 import re
 
 from core.brain.reader import BrainReader
@@ -143,10 +143,18 @@ class FlowController:
         )
 
     def run_meeting(self, task_folder: Path, departments: list[str]) -> FlowResult:
-        """Stage 3: research → meeting → synthesizer → STOP 1."""
+        """Stage 3: research → meeting → synthesizer → citation-validate → STOP 1.
+
+        P1.6: translator_mode controls how far TranslatorPipeline applies:
+          "off"              — no simplification
+          "final_only"       — only final decision report (default, preserves old behavior)
+          "all_intermediate" — also applies to each perspective output before they enter state
+        P1.8: CitationValidator runs after report written, appends warning section if flags found.
+        """
         from core.brain.reader import BrainReader
         from core.orchestrator.research_phase import ResearchPhase
         from core.orchestrator.perspectives_collector import PerspectivesCollector
+        from core.orchestrator.citation_validator import CitationValidator
         from core.meeting.meeting_graph import MeetingGraph
         from core.meeting.debate_state import new_meeting_state
         from core.translator.pipeline import TranslatorPipeline
@@ -163,18 +171,47 @@ class FlowController:
             task_folder=task_folder,
         )
 
-        # 2. Meeting graph
+        # 2. Translator pipeline — created once, shared across pipeline
+        # P1.6: translator_mode from config (default "final_only" preserves old behavior)
+        translator_mode = getattr(self.config, "translator_mode", "final_only")
+        glossary_path = self.vault.root / "00-Brain" / "glossary.md"
+        translator = TranslatorPipeline(self.llm, vault_glossary_path=glossary_path)
+
+        # 3. Meeting graph
         # P0.3 fix: use vault/01-Departments so BYOT + pack depts are picked up.
         # Fallback to repo/departments/ if vault path absent (test fixtures, CI).
         vault_depts = self.vault.root / "01-Departments"
         repo_depts = Path(__file__).parent.parent.parent / "departments"
         departments_root = vault_depts if vault_depts.exists() else repo_depts
-        collector = PerspectivesCollector(departments_root, self.llm)
+        collector = PerspectivesCollector(
+            departments_root=departments_root,
+            llm=self.llm,
+            vault_root=self.vault.root,
+        )
+
+        # P1.6: wrap collector with translator when all_intermediate mode
+        if translator_mode == "all_intermediate":
+            collector_fn = _make_translating_collector(collector.collect, translator)
+        else:
+            collector_fn = collector.collect
+
+        # P1.4: opt-in checkpointer. Default off vì SqliteSaver compat issues.
+        # Khi user bật `meeting.use_checkpointer=true` trong .vncoderc, thử init.
+        # Nếu fail (LangGraph version mismatch, SQLite locked, ...), log + fallback.
+        use_cp = bool(getattr(self.config.meeting, "use_checkpointer", False))
+        cp_setting: Any = False
+        if use_cp:
+            try:
+                from core.meeting.checkpointer import make_checkpointer
+                cp_setting = make_checkpointer()
+            except Exception as e:  # noqa: BLE001
+                self._log_warning(f"Checkpointer init failed, fallback off: {e}")
+                cp_setting = False
 
         graph = MeetingGraph(
             llm=self.llm,
-            perspectives_collector=collector.collect,
-            checkpointer=False,  # disable for now to avoid SQLite issues
+            perspectives_collector=collector_fn,
+            checkpointer=cp_setting,
         )
 
         state = new_meeting_state(
@@ -188,13 +225,16 @@ class FlowController:
 
         final_state = graph.build().invoke(state)
 
-        # 3. Write meeting outputs
+        # 4. Write intermediate meeting outputs to vault
         self._write_meeting_outputs(task_folder, final_state)
 
-        # 4. Translator pipeline (RULE 4) on final_report
-        glossary_path = self.vault.root / "00-Brain" / "glossary.md"
-        translator = TranslatorPipeline(self.llm, vault_glossary_path=glossary_path)
-        translated_report = translator.apply(final_state["final_report"])
+        # 5. Translator pipeline on final_report (RULE 4)
+        # "off" — skip; "final_only" / "all_intermediate" — always translate final report
+        # (in all_intermediate mode intermediates were already translated, final still needs it)
+        if translator_mode == "off":
+            translated_report = final_state["final_report"]
+        else:
+            translated_report = translator.apply(final_state["final_report"])
 
         decision_path = task_folder / "07-decision-report.md"
         decision_path.write_text(
@@ -202,19 +242,40 @@ class FlowController:
             encoding="utf-8",
         )
 
-        # 5. Auto-commit (best-effort)
+        # 6. P1.8: Citation validation post-synthesizer
+        validator = CitationValidator()
+        flags = validator.validate(decision_path)
+        flag_count = len(flags)
+
+        # 7. Auto-commit (best-effort, log on failure)
         try:
             GitSync(self.vault.root).commit(
                 f"feat(task): {task_folder.name} — decision report ready (Stop 1)"
             )
-        except Exception:
-            pass
+        except Exception as e:
+            self._log_warning(f"Git commit failed (Stop 1): {e}")
 
+        flag_msg = f" | {flag_count} claims thiếu citation được đánh dấu." if flag_count else ""
         return FlowResult(
             stage=FlowStage.PAUSE_DECISION_REPORT,
             task_folder=task_folder,
-            message=f"Decision report sẵn ở {decision_path.name}. CEO đọc + duyệt.",
+            message=f"Decision report sẵn ở {decision_path.name}. CEO đọc + duyệt.{flag_msg}",
         )
+
+    def _log_warning(self, message: str) -> None:
+        """Log warning vào <vault>/.vn-business-os.log thay vì swallow.
+
+        CEO có thể đọc file này để biết tại sao git commit fail, etc.
+        """
+        from datetime import datetime
+        log_path = self.vault.root / ".vn-business-os.log"
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        line = f"[{timestamp}] WARN: {message}\n"
+        try:
+            with log_path.open("a", encoding="utf-8") as f:
+                f.write(line)
+        except Exception:
+            pass  # log fail không nên gãy flow
 
     def _read_brief(self, task_folder: Path) -> str:
         brief_md = (task_folder / "00-brief.md").read_text(encoding="utf-8")
@@ -326,3 +387,36 @@ class FlowController:
             task_folder=task_folder,
             message=" | ".join(parts),
         )
+
+
+def _make_translating_collector(collect_fn, translator) -> "Callable":
+    """Wrap collector để translate mỗi perspective output (P1.6 all_intermediate mode).
+
+    Chỉ dùng khi translator_mode = 'all_intermediate'.
+    Translator gọi LLM nên tốn thêm cost — CEO phải opt-in qua .vncoderc:
+        translator_mode: all_intermediate
+    Tránh double-translate: final report vẫn được translate sau bởi flow_controller,
+    nhưng perspective inputs vào Synthesizer sẽ đã được simplify → cleaner synthesis.
+    Lỗi translator không gãy flow — fallback về raw text.
+    """
+    from typing import Callable  # noqa: F401 — type hint only
+
+    def _wrapped(state):
+        result = collect_fn(state)
+        perspectives = result.get("perspectives", {})
+        translated = {}
+        for dept_code, text in perspectives.items():
+            # Không translate error/placeholder markers
+            if isinstance(text, str) and (
+                text.startswith("[ERROR]") or text.startswith("[Phong")
+            ):
+                translated[dept_code] = text
+            else:
+                try:
+                    translated[dept_code] = translator.apply(text)
+                except Exception:
+                    # Translator failure must not break meeting flow
+                    translated[dept_code] = text
+        return {"perspectives": translated}
+
+    return _wrapped
