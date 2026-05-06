@@ -98,7 +98,16 @@ def onboard_vault(
         except Exception as e:  # noqa: BLE001
             result["warnings"].append(f"Git init failed: {e}")
 
-    # Step 7: Save config
+    # Step 7: Generate wikilinks (Brain hub + Dept hubs + agent cross-links)
+    from core.wikilinks import generate_wikilinks
+    wl = generate_wikilinks(vault)
+    result["wikilinks"] = wl
+    result["steps"].append(
+        f"Wikilinks: brain_hub={wl['brain_hub']}, "
+        f"dept_hubs={wl['dept_hubs']}, agents_linked={wl['agents_linked']}"
+    )
+
+    # Step 8: Save config
     config_path = vault / ".vncoderc"
     config_path.write_text(
         yaml.safe_dump(
