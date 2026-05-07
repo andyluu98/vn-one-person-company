@@ -1,87 +1,203 @@
 # Getting Started — VN Business OS
 
-> AI agent OS cho doanh nghiệp Việt Nam. CEO chat, agents họp bàn, sinh tài liệu.
+Hướng dẫn từ đầu đến chạy được task đầu tiên. Khoảng **15-20 phút** nếu đã có Claude Desktop + Python 3.11+.
 
-## 1. Cài đặt
+---
 
-```bash
-git clone <repo-url>
+## Yêu cầu
+
+| | |
+|---|---|
+| **Python** | 3.11+ |
+| **Claude Desktop** | Bản mới nhất ([download](https://claude.ai/download)) — có subscription Pro/Team |
+| **Obsidian** | (khuyến nghị) — để xem vault trực quan |
+| **Git** | Bất kỳ version nào |
+| **TAVILY_API_KEY** | (tùy chọn) — bật search luật/đối thủ. Free tier 1000 req/tháng tại [tavily.com](https://tavily.com) |
+| **Anthropic API key** | **KHÔNG cần** — plugin dùng MCP sampling qua Claude Desktop subscription |
+
+---
+
+## Bước 1 — Cài đặt plugin
+
+```powershell
+git clone https://github.com/<owner>/<repo>.git vn-business-os
 cd vn-business-os
+
+python -m venv .venv
+.venv\Scripts\activate                      # Windows
+# source .venv/bin/activate                 # macOS/Linux
+
 pip install -e .
-export ANTHROPIC_API_KEY=sk-...
-export TAVILY_API_KEY=tvly-...
 ```
 
-## 2. Onboard DN của bạn
-
-```bash
-vn-os onboard --vault ~/my-company-vault
+Verify:
+```powershell
+vn-os --help
+# Hiển thị: onboard, install-mcp, uninstall-mcp, ...
 ```
 
-Wizard sẽ:
-- Tạo vault Obsidian scaffold
-- Hỏi DN bạn ngành gì (F&B / Retail / Tech-SaaS / khác)
-- Cài pack tương ứng
-- Hỏi có template riêng không (BYOT)
-- Init Git private repo
+---
 
-## 3. Điền Brain
+## Bước 2 — Cài MCP server vào Claude Desktop
 
-Mở `~/my-company-vault/00-Brain/` trong Obsidian, điền:
-- `strategy.md` — tầm nhìn, ICP, mục tiêu
-- `products.md` — sản phẩm + giá + margin
-- `budget.md` — ngân sách quý
-- `headcount.md` — phòng ban active
-- `state.md` — KPI hiện tại
-
-## 4. Giao việc đầu tiên
-
-```bash
-vn-os run --brief "Tạo chiến dịch QC nhắm khách doanh nghiệp" --vault ~/my-company-vault
+```powershell
+vn-os install-mcp
 ```
 
-Hệ thống sẽ:
-1. Đọc Brain
-2. Phân loại task (SIMPLE/COMPLEX/STRATEGIC)
-3. Phát hiện gap, tạo `03-clarification.md` với câu hỏi
-4. **DỪNG** chờ bạn trả lời
+Output:
+```
+✓ Installed MCP server 'vn-business-os'
+   Config: C:\Users\<you>\AppData\Roaming\Claude\claude_desktop_config.json
+   Backup: ...claude_desktop_config.json.bak
 
-Mở file, tick checkbox, lưu, rồi:
-
-```bash
-vn-os meeting <task-folder>
+Bước tiếp: Restart Claude Desktop để load MCP server.
 ```
 
-Hệ thống chạy debate giữa các phòng → tạo `07-decision-report.md` → **DỪNG** chờ bạn duyệt.
+**→ Đóng hoàn toàn Claude Desktop, mở lại.**
 
-```bash
-vn-os approve <task-folder>
-vn-os execute <task-folder>
+Verify trong Claude Desktop chat:
+```
+Liệt kê MCP tools có sẵn.
 ```
 
-Sinh `.docx/.xlsx` vào `03-Outputs/`.
+Phải thấy 8 tools: `vn_run`, `vn_resume`, `vn_meeting`, `vn_approve`, `vn_execute`, `vn_status`, `vn_onboard`, `vn_upgrade`.
 
-## 5. Tích hợp Claude Code / Cowork
+---
 
-```bash
-bash adapters/claude-code/install.sh
+## Bước 3 — Tạo vault cho công ty của bạn
+
+Trong Claude Desktop chat:
+
+```
+Setup vault cho công ty XYZ tại đường dẫn:
+F:\work\xyz-vault
+
+Cài pack F&B (vì XYZ là chuỗi cafe).
+TAVILY_API_KEY của tôi: tvly-xxx
 ```
 
-Trong Claude Code, gõ tự nhiên: *"Tạo chiến dịch QC nhắm khách thu nhập 50tr+"* — skill sẽ tự active.
+Claude tự động gọi `vn_onboard(vault=..., packs=["fnb"], tavily_api_key="tvly-xxx")`.
 
-## 6. 6 Rules quan trọng
+Plugin sẽ:
+1. Copy vault scaffold (8 Brain files + 12 phòng ban + 191 template)
+2. Cài pack `fnb` (thêm phòng Bếp + An toàn thực phẩm)
+3. Sinh wikilinks cho Obsidian graph view
+4. Lưu key vào `<vault>/.env` (auto-add vào `.gitignore`)
+5. Init Git private repo
 
-1. **Brain-first**: Hệ thống không hỏi nếu chưa đọc Brain
-2. **Domain-neutral**: Không có dấu vết trading/finance
-3. **Single source of truth**: Obsidian vault là sự thật
-4. **CEO-friendly**: Tiếng Việt + định nghĩa thuật ngữ + TL;DR
-5. **Live research**: Search luật/đối thủ/benchmark, cite nguồn
-6. **BYOT**: Template DN > pack > default
+Output mẫu:
+```yaml
+ok: true
+vault: F:\work\xyz-vault
+steps:
+  - Copied scaffold to F:\work\xyz-vault
+  - Installed core departments
+  - Installed pack fnb
+  - Saved 1 API key(s) → .env (TAVILY_API_KEY)
+  - Wikilinks: brain_hub=True, dept_hubs=14, agents_linked=40
+  - Git initialized
+packs: [fnb]
+next_steps:
+  - Open <vault>/00-Brain/ and fill strategy.md, products.md, ...
+```
 
-## Troubleshooting
+---
 
-- **"Brain dir not found"** → check vault path
-- **LLM timeout** → check API key, rate limit
-- **Tool API down** → cache 24h, system báo UNVERIFIED
+## Bước 4 — Inject API key vào MCP server
 
-Xem thêm: [architecture.md](architecture.md), [how-to-create-pack.md](how-to-create-pack.md)
+**Bắt buộc khi onboard có TAVILY_API_KEY** — để Claude Desktop launch MCP với env.
+
+```powershell
+vn-os install-mcp --vault "F:\work\xyz-vault"
+```
+
+Output sẽ thêm:
+```
+   Env injected: TAVILY_API_KEY
+```
+
+**→ Restart Claude Desktop lần nữa.**
+
+Verify trong chat:
+```
+vn_status vault F:\work\xyz-vault
+```
+
+Phải thấy:
+```yaml
+tools_live:
+  - web_search
+  - vn_law_search
+  - vn_local_regulation
+  - competitor_research
+  - industry_benchmark
+  - tax_calculator
+tools_skipped: []
+```
+
+Nếu `tools_skipped` còn search tools → key chưa được inject. Re-run install-mcp.
+
+---
+
+## Bước 5 — Điền Brain (1 lần)
+
+Mở `<vault>/` trong Obsidian. Mở `00-Brain/`:
+
+| File | Điền gì |
+|---|---|
+| `strategy.md` | Tầm nhìn 3-5 năm, sứ mệnh, ICP (3 đặc điểm), mục tiêu năm |
+| `products.md` | Bảng SP/dịch vụ: \| mã \| tên \| giá \| margin \| trạng thái \| |
+| `budget.md` | Tổng ngân sách năm, phân bổ theo phòng |
+| `headcount.md` | Phòng nào active (`- 07-marketing`, `- 03-finance`, ...), gap chuyên môn |
+| `state.md` | Giai đoạn (seed/growth/mature/pivot), runway, KPI quý |
+| `laws.md` | Luật áp dụng — pack đã pre-fill VSATTP, Luật DN 2020, BLLĐ 2019. CEO bổ sung đặc thù |
+
+Nhờ Claude giúp:
+```
+Đọc Brain hiện tại của vault F:\work\xyz-vault. Gợi ý tôi điền thông tin
+chiến lược dựa trên ngành cafe SME.
+```
+
+---
+
+## Bước 6 — Chạy task đầu tiên
+
+```
+Tôi muốn làm chiến dịch quảng cáo Tết 2026 cho cafe XYZ.
+Ngân sách dự kiến 50 triệu, 3 chi nhánh quận 1.
+```
+
+Plugin chạy 5 stage tự động:
+
+### Stage 1: `vn_run` (router + clarification)
+- Phân loại COMPLEX (3-5 phòng debate)
+- Phòng tham gia: `02-strategy`, `03-finance`, `06-sales`, `07-marketing`, `14-food-safety`
+- Tạo `03-clarification.md` với 4 câu hỏi
+- → Mở file, trả lời checkbox
+
+### Stage 2: `vn_resume`
+- Đọc câu trả lời → continue
+
+### Stage 3: `vn_meeting`
+- Live research: luật quảng cáo + đối thủ + benchmark
+- Họp 5 phòng × Pro + Con + 3 perspective (Growth/Cautious/Balanced)
+- Synthesizer + Translator + Citation validator → `07-decision-report.md`
+
+### Stage 4: `vn_approve`
+- Sinh `08-execution-plan.md` có:
+  - Bảng tasks (owner, deadline, deliverable)
+  - Bảng template cần render
+  - Risks + mitigation + KPIs
+
+### Stage 5: `vn_execute`
+- Render `.docx/.xlsx` từ template → `<vault>/03-Outputs/<task>/`
+- CEO mở folder, gửi cho team
+
+---
+
+## Tiếp theo
+
+- [User Guide](user-guide.md) — chi tiết từng stage + ví dụ task khác
+- [Configuration](configuration.md) — `.vncoderc`, packs, BYOT
+- [Troubleshooting](troubleshooting.md) — lỗi thường gặp
+- [Architecture](architecture.md) — kiến trúc + 6 RULES

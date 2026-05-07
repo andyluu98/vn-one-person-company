@@ -27,7 +27,7 @@ build-backend = "hatchling.build"
 name = "vn-business-os"
 version = "0.1.0"
 description = "AI-powered Operating System for Vietnamese SMEs"
-authors = [{ email = "ltuananhsd@gmail.com" }]
+authors = [{ email = "your-email@example.com" }]
 license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
@@ -78,7 +78,7 @@ checkpoints/
 
 - [ ] **Step 1.3: Create `LICENSE` (MIT)**
 
-Standard MIT text với copyright "ltuananhsd@gmail.com 2026". (Trong NOTICE: 191 template trong `templates-vn/` adapted from business-builder.plugin; engine debate pattern adapted from TradingAgents.)
+Standard MIT text với copyright "your-email@example.com 2026". (Trong NOTICE: 191 template trong `templates-vn/` adapted from business-builder.plugin; engine debate pattern adapted from TradingAgents.)
 
 - [ ] **Step 1.4: Create `README.md`**
 

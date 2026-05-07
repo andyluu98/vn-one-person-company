@@ -1,5 +1,7 @@
 # Architecture
 
+> Kiến trúc kỹ thuật + 6 RULES + extensibility points. Đối tượng: developer + tech-aware CEO.
+
 ## 4 lớp
 
 ```
@@ -66,7 +68,35 @@ CEO brief
 - SQLite (checkpoint + tool cache)
 - python-docx + openpyxl (output rendering)
 - Tavily API (web search + VN law/local regulation)
-- Anthropic SDK (default LLM, fallback Gemini/OpenAI)
+- **MCP Sampling** qua Claude Desktop subscription (default — KHÔNG cần API key)
+- Anthropic SDK (fallback nếu chạy ngoài MCP)
+- Optional: Google Gemini, OpenAI fallbacks
+
+## v0.2.0 architecture: MCP Sampling
+
+```
+┌─ Claude Desktop GUI ───────────────────────────┐
+│  CEO chat với Claude Sonnet                    │
+│       ↓                                         │
+│  Claude calls MCP tool vn_meeting               │
+│       ↓                                         │
+│  ┌─ MCP Server (vn-business-os) ─────────────┐ │
+│  │  FlowController.run_meeting()             │ │
+│  │       ↓                                    │ │
+│  │  llm.complete(messages)                    │ │
+│  │       ↓                                    │ │
+│  │  MCPSamplingProvider                       │ │
+│  │       ↓                                    │ │
+│  │  ctx.session.create_message(...)  ─────┐  │ │
+│  └────────────────────────────────────────┼──┘ │
+│                                            ↓    │
+│  Sampling request returns to Claude       │    │
+│  Claude generates response                │    │
+│  Response back to MCP server  ←───────────┘    │
+└─────────────────────────────────────────────────┘
+```
+
+→ Plugin chạy bên trong Claude Desktop session, mỗi LLM call route qua subscription user. Không cần API key Anthropic.
 
 ## Cost budget
 

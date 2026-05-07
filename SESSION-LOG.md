@@ -1,7 +1,7 @@
 # Session Log — Brainstorm "One Person Company" VN
 
 **Khoảng thời gian:** 2026-05-05 22:46 → 2026-05-06 00:56 (Asia/Bangkok)
-**CEO (user):** ltuananhsd@gmail.com
+**CEO (user):** your-email@example.com
 **Đối tác AI:** Claude Code (Opus 4.7)
 **Mục tiêu:** Brainstorm + thiết kế + plan chi tiết cho repo open-source AI agent OS dành cho doanh nghiệp Việt Nam.
 
@@ -233,7 +233,7 @@ Tóm tắt: prompt session mới với:
 
 ## 8. Đặc điểm quan trọng cần nhớ
 
-- **CEO (người dùng repo này):** `ltuananhsd@gmail.com` — đang xây hệ thống cho DN của mình + dự định open-source.
+- **CEO (người dùng repo này):** `your-email@example.com` — đang xây hệ thống cho DN của mình + dự định open-source.
 - `business-builder.plugin` (file zip có sẵn trong `references/`) là nguồn 191 template được vendor vào `templates-vn/`. KHÔNG attribute author cá nhân.
 - **CEO ưu tiên:** ngôn ngữ dễ hiểu (RULE 4), không bịa (RULE 5 cite nguồn), tận dụng template VN có sẵn (RULE 6 BYOT + bundle bb-plugin).
 - **CEO không thích:** từ chuyên ngành abstract, AI tự bịa số liệu, plugin chỉ generate text mà không debate.

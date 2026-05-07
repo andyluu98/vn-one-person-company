@@ -367,7 +367,7 @@ git commit -m "feat(adapters): add Claude Code skill adapter"
   "version": "0.1.0",
   "description": "AI agent OS cho doanh nghiệp Việt Nam — debate giữa các phòng ban, sinh tài liệu .docx/.xlsx tuân thủ luật VN. Powered by Python + LangGraph backend.",
   "author": {
-    "email": "ltuananhsd@gmail.com"
+    "email": "your-email@example.com"
   },
   "credits": {
     "templates_vn": "adapted from business-builder.plugin",
@@ -1070,7 +1070,7 @@ PR welcome. Đặc biệt cần:
 
 ## 📜 License
 
-MIT — © 2026 ltuananhsd@gmail.com
+MIT — © 2026 your-email@example.com
 
 **Credits:**
 - 191 template tiếng Việt trong `templates-vn/` adapted from `business-builder.plugin`

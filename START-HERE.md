@@ -37,7 +37,7 @@ Khi tôi confirm, dùng skill `superpowers:subagent-driven-development` để ch
 Repo gốc tạo NGAY tại folder hiện tại (KHÔNG tạo subfolder vn-business-os).
 
 LƯU Ý:
-- Tôi là CEO/owner (ltuananhsd@gmail.com)
+- Tôi là CEO/owner (your-email@example.com)
 - Mọi code phải tuân thủ 6 RULES trong DECISIONS.md
 - Mọi output cho tôi phải tiếng Việt + định nghĩa thuật ngữ + có TL;DR (RULE 4)
 ```
@@ -69,7 +69,7 @@ LƯU Ý:
 ## 🔑 4 thông tin tối quan trọng (nếu Claude session mới chỉ đọc 1 đoạn → đọc đoạn này)
 
 ### 1. Mình là ai?
-- **CEO/Owner repo:** `ltuananhsd@gmail.com` (chính là tôi, người đang chat)
+- **CEO/Owner repo:** `your-email@example.com` (chính là tôi, người đang chat)
 - **`references/business-builder.plugin`:** file zip nguồn — chứa 191 template tiếng Việt được vendor vào `templates-vn/`
 
 ### 2. Project là gì?

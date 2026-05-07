@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "vn-business-os"
 version = "0.1.0"
 description = "AI-powered Operating System for Vietnamese SMEs"
-authors = [{ email = "ltuananhsd@gmail.com" }]
+authors = [{ name = "VN Business OS Contributors" }]
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.11"

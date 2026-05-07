@@ -2,7 +2,7 @@
 
 > Trạng thái: **Chờ triển khai sau v1 dùng thực tế ≥ 2-4 tuần**
 > Ngày tạo: 2026-05-06
-> Owner: ltuananhsd@gmail.com
+> Owner: your-email@example.com
 
 ---
 

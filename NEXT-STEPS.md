@@ -43,7 +43,7 @@ export TAVILY_API_KEY=tvly-...           # cho Phase 4 (tools)
 
 # Git config (nếu chưa có)
 git config --global user.name "<your name>"
-git config --global user.email "ltuananhsd@gmail.com"
+git config --global user.email "your-email@example.com"
 ```
 
 ---
@@ -152,7 +152,7 @@ Sau khi Phase 6 done → tag `v0.1.0` → ship được v1.
 
 ## 📞 Tác giả & nguồn tham chiếu
 
-**CEO / Repo owner:** `ltuananhsd@gmail.com`
+**CEO / Repo owner:** `your-email@example.com`
 
 **Vendored content credit:**
 - 191 template tiếng Việt trong `templates-vn/` lấy từ `references/business-builder.plugin`.

@@ -1,74 +1,213 @@
 # VN Business OS
 
-> AI Operating System cho doanh nghiệp Việt Nam — CEO chat, agents (phòng ban) họp bàn debate, sinh tài liệu .docx/.xlsx tuân thủ luật VN.
+> **AI Operating System cho Doanh nghiệp Việt Nam** — CEO chat tự nhiên, các phòng ban AI họp bàn debate, sinh báo cáo + tài liệu `.docx/.xlsx` tuân thủ luật VN. Chạy qua Claude Desktop subscription, **không cần Anthropic API key**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/built_on-LangGraph-purple.svg)](https://github.com/langchain-ai/langgraph)
+[![Tests](https://img.shields.io/badge/tests-261_passed-brightgreen.svg)](#)
 
-## Vấn đề
+---
 
-DN nhỏ-vừa VN cần hệ thống vận hành chuẩn nhưng:
-- Không đủ HR để xây 192 tài liệu vận hành
-- AI generic không hiểu luật VN, ngữ cảnh DN cụ thể
-- Plugin kiểu prompt chỉ ra tài liệu, không debate / kiểm chéo
+## ✨ Tại sao cần?
 
-## Giải pháp
+DN nhỏ-vừa Việt Nam thường gặp 3 vấn đề khi vận hành:
 
-VN Business OS là **engine debate giữa các phòng ban AI agents** + **knowledge base tài liệu chuẩn VN** + **tuân thủ luật VN**:
+| Vấn đề | Hậu quả |
+|---|---|
+| Không đủ HR để xây 192 tài liệu vận hành chuẩn | Vận hành ad-hoc, mỗi nhân viên một kiểu |
+| AI generic (ChatGPT) không hiểu luật VN, ngữ cảnh DN cụ thể | Output không tuân thủ pháp lý, generic, ko dùng được |
+| Plugin AI chỉ "1 prompt → 1 tài liệu" | Không có debate/kiểm chéo, sai sót cao |
+
+**VN Business OS** giải quyết 3 vấn đề trên bằng kiến trúc **multi-agent debate engine** kết hợp **knowledge base luật VN** + **template chuẩn ngành**.
+
+---
+
+## 🏗 Kiến trúc
 
 ```
-CEO chat → Router phân loại task → Đọc Brain DN → Phát hiện gap (Brain-first)
-        → Hỏi CEO clarification (có citation) → Research live (luật, đối thủ)
-        → Họp Pro/Con + 3 góc nhìn → Báo cáo có TL;DR
-        → CEO duyệt → Sinh .docx/.xlsx → Lưu Obsidian + Git
+┌────────────────────────────────────────────────────────────────┐
+│  CEO chat trong Claude Desktop / Code                           │
+│              ↓                                                  │
+│  vn_run(brief) → Router phân loại → Đọc Brain DN              │
+│              ↓                                                  │
+│  Phát hiện gap → Hỏi clarification (có cite Brain)            │
+│              ↓                                                  │
+│  vn_meeting → Live research (luật, đối thủ, benchmark)        │
+│              ↓                                                  │
+│  Họp 12 phòng ban → Pro/Con debate → 3 góc nhìn perspective  │
+│              ↓                                                  │
+│  Synthesizer + Translator (CEO-friendly) + Citation validator │
+│              ↓                                                  │
+│  vn_approve → Execution plan structured                        │
+│              ↓                                                  │
+│  vn_execute → Render .docx/.xlsx → 03-Outputs/                │
+│              ↓                                                  │
+│  Auto-commit Git private repo (Obsidian vault)                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-## Kiến trúc
+### Stack
 
-- **Engine debate**: Python + LangGraph (bóc từ TradingAgents, rename neutral)
-- **Knowledge base**: 192 template tiếng Việt từ business-builder.plugin
-- **Storage**: Obsidian Markdown + Git private repo
-- **Multi-tool entry**: Claude Code / Cowork / Codex / Antigravity
+- **Engine debate**: Python 3.11+ + LangGraph (adapt từ TradingAgents, rename neutral)
+- **Knowledge base**: 192 template tiếng Việt + 12 phòng ban core + 3 industry pack
+- **Storage**: Obsidian Markdown + Git private (mỗi DN 1 vault)
+- **LLM**: MCP sampling qua Claude Desktop (subscription) — KHÔNG cần API key Anthropic
+- **Search**: Tavily (free tier 1000 req/tháng) cho luật/đối thủ/web
 
-## Quick Start
+---
+
+## 🚀 Quick Start
+
+### 1. Cài đặt
+
+```powershell
+# Clone repo
+git clone https://github.com/<owner>/<repo>.git
+cd <repo>
+
+# Tạo venv
+python -m venv .venv
+.venv\Scripts\activate     # Windows
+# source .venv/bin/activate  # macOS/Linux
+
+# Install
+pip install -e .
+```
+
+### 2. Cài MCP server vào Claude Desktop
+
+```powershell
+vn-os install-mcp
+# Restart Claude Desktop
+```
+
+### 3. Tạo vault cho công ty
+
+Trong Claude Desktop chat:
+```
+Setup vault cho công ty XYZ tại đường dẫn F:/work/xyz-vault.
+Cài pack F&B. TAVILY_API_KEY của tôi: tvly-xxx (lấy free tại tavily.com).
+```
+
+Claude tự động gọi MCP tool `vn_onboard` để tạo vault scaffold + cài pack + lưu key vào `<vault>/.env` (gitignored).
+
+### 4. Re-install MCP với env injected
+
+```powershell
+vn-os install-mcp --vault "F:/work/xyz-vault"
+# Restart Claude Desktop lần nữa
+```
+
+### 5. Điền Brain (1 lần)
+
+CEO mở `<vault>/00-Brain/` trong Obsidian, điền:
+- `strategy.md` — tầm nhìn, sứ mệnh, ICP, mục tiêu năm
+- `products.md` — bảng sản phẩm/dịch vụ + giá + margin
+- `budget.md` — ngân sách năm + phân bổ phòng ban
+- `headcount.md` — phòng nào active, gap chuyên môn
+- `state.md` — giai đoạn DN (seed/growth/...), runway
+
+### 6. Chạy task đầu tiên
+
+Trong Claude Desktop chat:
+```
+Tôi muốn làm chiến dịch quảng cáo Tết cho sản phẩm A.
+Tham khảo budget hiện tại + tham vấn pháp lý.
+```
+
+Plugin sẽ:
+1. Phân loại task → COMPLEX (3-5 phòng debate)
+2. Đọc Brain → phát hiện gap (cần ngân sách marketing cụ thể?)
+3. Hỏi CEO 3-5 câu clarification
+4. Research luật quảng cáo VN + đối thủ
+5. Họp pro/con + 3 perspective (Growth/Cautious/Balanced)
+6. Sinh `07-decision-report.md` (CEO duyệt)
+7. Sinh `08-execution-plan.md` + render `.docx/.xlsx`
+
+---
+
+## 📦 Industry Packs
+
+| Pack | Phòng ban thêm | Tuân thủ |
+|---|---|---|
+| **F&B** (`fnb`) | Bếp, An toàn thực phẩm | NĐ 15/2018 VSATTP, PCCC TCVN 5738 |
+| **Retail** (`retail`) | Kho vận, Logistics | TT 78/2021 hoá đơn ĐT |
+| **Tech-SaaS** (`tech-saas`) | Engineering, Design, Data | NĐ 13/2023 PDPA, GDPR |
+
+---
+
+## 📜 6 RULES (bất di bất dịch)
+
+| # | Rule | Implementation |
+|---|---|---|
+| 1 | **Brain-first** | Không hỏi CEO khi chưa đọc Brain |
+| 2 | **Domain-neutral** | Engine ko leak trading/finance jargon |
+| 3 | **Single source of truth** | Obsidian vault canonical |
+| 4 | **CEO-friendly language** | Translator pipeline (3 modes) |
+| 5 | **Live research with citations** | Tools graceful skip + citation validator |
+| 6 | **BYOT** | DN custom > pack > default |
+
+---
+
+## 🛠 Configuration
+
+Edit `<vault>/.vncoderc`:
+
+```yaml
+vault_path: F:/work/xyz-vault
+packs: [fnb]
+version: "0.1.0"
+
+# Translator scope (P1.6)
+# off | final_only (default) | all_intermediate
+translator_mode: final_only
+
+meeting:
+  max_debate_rounds: 2
+  max_perspective_rounds: 1
+  use_checkpointer: false  # P1.4 opt-in crash recovery
+
+llm:
+  primary: claude-sonnet-4-6
+```
+
+---
+
+## 🧪 Tests
 
 ```bash
-pip install -e .
-export ANTHROPIC_API_KEY=...
-vn-os onboard --vault ~/my-company-vault
-vn-os run --brief "Tạo chiến dịch QC..." --vault ~/my-company-vault
+python -m pytest tests/ -q
+# 261 passed, 1 skipped
 ```
 
-Xem chi tiết: [docs/getting-started.md](docs/getting-started.md)
+---
 
-## Industry Packs
+## 📚 Documentation
 
-- **F&B** — kitchen, food-safety, food cost tracking
-- **Retail** — warehouse, logistics, marketplace integration
-- **Tech-SaaS** — engineering, product-design, data, growth
+- [`docs/getting-started.md`](docs/getting-started.md) — cài đặt + onboard chi tiết
+- [`docs/user-guide.md`](docs/user-guide.md) — flow 5 stage + ví dụ
+- [`docs/configuration.md`](docs/configuration.md) — `.vncoderc`, packs, BYOT
+- [`docs/troubleshooting.md`](docs/troubleshooting.md) — lỗi thường gặp
+- [`docs/architecture.md`](docs/architecture.md) — kiến trúc + RULES + extensibility
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — đóng góp code
 
-## 6 Rules
+---
 
-| # | Rule |
-|---|---|
-| 1 | Brain-first clarification — không hỏi khi chưa đọc Brain |
-| 2 | Domain-neutral — engine không leak trading/finance |
-| 3 | Single source of truth — Obsidian là sự thật |
-| 4 | CEO-friendly language — tiếng Việt + jargon defined + TL;DR |
-| 5 | Live research with citations — luật/đối thủ/benchmark |
-| 6 | BYOT — template DN > pack > default |
-
-## Đóng góp
+## 🤝 Đóng góp
 
 PR welcome. Đặc biệt cần:
 - Pack mới: Real Estate, Healthcare, Education, Beauty
-- Việt hoá thêm agency-agents roles
-- Test coverage
+- Translation: thêm thuật ngữ VN→EN trong glossary
+- Test coverage: real-LLM E2E
 
-## License
+Xem [CONTRIBUTING.md](CONTRIBUTING.md).
 
-MIT — © 2026 ltuananhsd@gmail.com
+---
+
+## 📄 License
+
+MIT — © 2026 VN Business OS Contributors
 
 **Credits:**
 - 192 template tiếng Việt trong `templates-vn/` adapted from `business-builder.plugin`
