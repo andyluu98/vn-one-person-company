@@ -57,14 +57,14 @@ def _vault_root_from_task(task_folder: Path) -> Path:
 
 
 @mcp.tool()
-def vn_run(brief: str, vault: str, ctx: Context) -> dict:
+async def vn_run(brief: str, vault: str, ctx: Context) -> dict:
     """Stage 1: brief → router → gap → clarification (PAUSE).
 
     Returns task_folder path + stage. If stage == PAUSE_CLARIFICATION,
     CEO needs to answer questions in 03-clarification.md before vn_resume.
     """
     fc = _make_fc(vault, ctx)
-    result = fc.run(brief)
+    result = await fc.arun(brief)
     return {
         "stage": result.stage.value,
         "task_folder": str(result.task_folder),

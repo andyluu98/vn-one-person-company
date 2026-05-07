@@ -3,6 +3,7 @@
 Verifies user can run vn-business-os entirely qua MCP (not subprocess CLI),
 proving v0.2.0 architecture works.
 """
+import asyncio
 import json
 import shutil
 from pathlib import Path
@@ -68,7 +69,7 @@ def test_mcp_vn_run_routes_via_sampling(tmp_path):
     ])
 
     from core.mcp_server import vn_run
-    result = vn_run(brief="Soạn JD kế toán trưởng", vault=str(vault), ctx=ctx)
+    result = asyncio.run(vn_run(brief="Soạn JD kế toán trưởng", vault=str(vault), ctx=ctx))
 
     assert "stage" in result
     assert "task_folder" in result
@@ -109,11 +110,11 @@ def test_mcp_full_flow_brief_to_clarification_pause(tmp_path):
     ])
 
     from core.mcp_server import vn_run
-    result = vn_run(
+    result = asyncio.run(vn_run(
         brief="Tạo chiến dịch QC nhắm khách thu nhập 50tr+",
         vault=str(vault),
         ctx=ctx,
-    )
+    ))
 
     assert result["stage"] == "PAUSE_CLARIFICATION"
     task_folder = Path(result["task_folder"])
@@ -139,7 +140,7 @@ def test_mcp_no_anthropic_api_key_needed(tmp_path, monkeypatch):
     ])
 
     from core.mcp_server import vn_run
-    result = vn_run(brief="test", vault=str(vault), ctx=ctx)
+    result = asyncio.run(vn_run(brief="test", vault=str(vault), ctx=ctx))
 
     # Must succeed without API key — proves MCP sampling path is used
     assert "stage" in result

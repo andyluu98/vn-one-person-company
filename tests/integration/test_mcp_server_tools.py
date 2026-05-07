@@ -126,7 +126,7 @@ def test_vn_run_routes_llm_via_mcp_sampling_provider(tmp_path):
 
     from core.mcp_server import vn_run
 
-    result = vn_run(brief="Soạn JD kế toán", vault=str(vault), ctx=mock_ctx)
+    result = asyncio.run(vn_run(brief="Soạn JD kế toán", vault=str(vault), ctx=mock_ctx))
 
     assert "stage" in result
     assert "task_folder" in result

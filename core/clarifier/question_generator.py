@@ -83,3 +83,32 @@ class QuestionGenerator:
             choices=d.get("choices", []),
             free_text=d.get("free_text", False),
         ) for d in data]
+
+    async def agenerate(self, gaps: list[Gap], brain: dict, brief: str) -> list[Question]:
+        """Async version of generate() — dùng trong async MCP tools."""
+        if not gaps:
+            return []
+        actionable = [g for g in gaps if g.severity in (Severity.CRITICAL, Severity.WARN)]
+        if not actionable:
+            return []
+        gaps_text = "\n".join(
+            f"- [{g.severity.value}] {g.field}: brief='{g.brief_value}' vs brain='{g.current_value}' "
+            f"(cite: {g.citation}) — {g.reason}"
+            for g in actionable
+        )
+        messages = [
+            {"role": "system", "content": QG_PROMPT},
+            {"role": "user", "content": f"## BRIEF\n{brief}\n\n## GAPS\n{gaps_text}\n\nSinh questions."},
+        ]
+        raw = await self.llm.acomplete(messages)
+        m = re.search(r"\[.*\]", raw, re.DOTALL)
+        if not m:
+            return []
+        data = json.loads(m.group(0))
+        return [Question(
+            text=d["text"],
+            citation=d["citation"],
+            severity=Severity(d["severity"]),
+            choices=d.get("choices", []),
+            free_text=d.get("free_text", False),
+        ) for d in data]

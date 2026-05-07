@@ -36,6 +36,10 @@ class ClaudeProvider:
         )
         return resp.content[0].text
 
+    async def acomplete(self, messages: list[dict], model: str | None = None) -> str:
+        import asyncio
+        return await asyncio.to_thread(self.complete, messages, model)
+
 
 class MCPSamplingProvider:
     """LLM provider routing complete() qua MCP sampling protocol.
@@ -140,6 +144,47 @@ class MCPSamplingProvider:
         if inspect.isawaitable(result):
             result = self._run_sync_with_timeout(result, self.timeout_seconds)
 
+        return self._extract_text(result)
+
+    async def acomplete(self, messages: list[dict], model: str | None = None) -> str:
+        """Async version — dùng trong async MCP tool functions để tránh deadlock.
+
+        FastMCP gọi sync tool trực tiếp trên event loop, nên complete() bị deadlock
+        khi cố chạy create_message() trong ThreadPoolExecutor mới. acomplete() await
+        create_message() trực tiếp trên event loop hiện tại — không có threading.
+        """
+        last_exc: BaseException | None = None
+        delay = self.retry_initial_delay
+
+        for attempt in range(self.max_retries + 1):
+            try:
+                return await self._do_acomplete(messages, model)
+            except Exception as e:  # noqa: BLE001
+                last_exc = e
+                if attempt >= self.max_retries or not self._is_retryable(e):
+                    raise
+                import asyncio
+                await asyncio.sleep(delay)
+                delay *= 2
+
+        raise last_exc or RuntimeError("MCPSamplingProvider.acomplete failed")
+
+    async def _do_acomplete(self, messages: list[dict], model: str | None) -> str:
+        """1 async attempt — await create_message() trực tiếp."""
+        system_prompt, conv_messages = self._split_system(messages)
+        sampling_messages, model_prefs = self._build_request_payload(conv_messages, model)
+
+        kwargs: dict[str, Any] = {
+            "messages": sampling_messages,
+            "model_preferences": model_prefs,
+            "max_tokens": 4096,
+        }
+        if system_prompt:
+            kwargs["system_prompt"] = system_prompt
+
+        result = self.server.create_message(**kwargs)
+        if inspect.isawaitable(result):
+            result = await result
         return self._extract_text(result)
 
     @staticmethod

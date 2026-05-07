@@ -77,6 +77,28 @@ class GapAnalyzer:
             citation=d["citation"],
         ) for d in data]
 
+    async def aanalyze(self, brief: str, brain: BrainContext) -> list[Gap]:
+        """Async version of analyze() — dùng trong async MCP tools."""
+        brain_dump = brain.model_dump_json(indent=2)
+        messages = [
+            {"role": "system", "content": GAP_PROMPT},
+            {"role": "user", "content": (
+                f"## BRIEF\n{brief}\n\n"
+                f"## BRAIN\n```json\n{brain_dump}\n```\n\n"
+                "Tìm gaps. Trả JSON array."
+            )},
+        ]
+        raw = await self.llm.acomplete(messages)
+        data = self._parse_json_array(raw)
+        return [Gap(
+            field=d["field"],
+            severity=Severity(d["severity"]),
+            current_value=d.get("current_value", ""),
+            brief_value=d.get("brief_value", ""),
+            reason=d.get("reason", ""),
+            citation=d["citation"],
+        ) for d in data]
+
     @staticmethod
     def _parse_json_array(raw: str) -> list[dict]:
         m = re.search(r"\[.*\]", raw, re.DOTALL)

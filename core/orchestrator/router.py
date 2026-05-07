@@ -80,6 +80,27 @@ class Router:
             confidence=float(data.get("confidence", 0.8)),
         )
 
+    async def aclassify(self, brief: str, brain: BrainContext) -> TaskClassification:
+        """Async version of classify() — dùng trong async MCP tools."""
+        active = brain.headcount.active_departments
+        rules_text = yaml.safe_dump(self.rules, allow_unicode=True)
+        messages = [
+            {"role": "system", "content": ROUTER_PROMPT + f"\n\n## RULES\n```yaml\n{rules_text}\n```"},
+            {"role": "user", "content": (
+                f"## BRIEF\n{brief}\n\n"
+                f"## PHÒNG ĐANG ACTIVE\n{active}\n\n"
+                f"Phân loại + chọn phòng cần triệu tập. Trả JSON đúng format."
+            )},
+        ]
+        raw = await self.llm.acomplete(messages)
+        data = self._parse_json(raw)
+        return TaskClassification(
+            class_=TaskClass(data["class"]),
+            departments=data["departments"],
+            reasoning=data.get("reasoning", ""),
+            confidence=float(data.get("confidence", 0.8)),
+        )
+
     @staticmethod
     def _parse_json(raw: str) -> dict:
         """Parse JSON từ LLM output — robust với multi-block, code fence, prose.

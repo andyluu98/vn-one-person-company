@@ -122,6 +122,66 @@ class FlowController:
             message=f"Vui lòng trả lời {len(questions)} câu trong {clarification_path.name}",
         )
 
+    async def arun(self, brief: str) -> FlowResult:
+        """Async version of run() — dùng trong async MCP tools để tránh deadlock.
+
+        FastMCP gọi sync tool trực tiếp trên event loop, nên llm.complete() bị deadlock.
+        arun() dùng acomplete() → await create_message() trực tiếp, không threading.
+        """
+        task_folder = self.vault.create_task_folder(_slugify(brief))
+        (task_folder / "00-brief.md").write_text(
+            f"---\ntype: brief\n---\n# Brief\n\n{brief}\n", encoding="utf-8",
+        )
+
+        brain = BrainReader(self.vault.root).load()
+
+        rules_path = Path(__file__).parent / "classifier_rules.yaml"
+        router = Router(self.llm, rules_path=rules_path)
+        classification = await router.aclassify(brief, brain)
+
+        (task_folder / "01-routing.md").write_text(
+            f"---\ntype: routing\n---\n# Phân loại task\n\n"
+            f"- **Class:** {classification.class_.value}\n"
+            f"- **Departments:** {', '.join(classification.departments)}\n"
+            f"- **Reasoning:** {classification.reasoning}\n",
+            encoding="utf-8",
+        )
+
+        (task_folder / "02-context.md").write_text(
+            "---\ntype: context\n---\n# Brain context loaded\n\n"
+            f"```yaml\n{brain.model_dump_json(indent=2)}\n```\n",
+            encoding="utf-8",
+        )
+
+        analyzer = GapAnalyzer(self.llm)
+        gaps = await analyzer.aanalyze(brief, brain)
+
+        if not gaps:
+            return FlowResult(
+                stage=FlowStage.PAUSE_DECISION_REPORT,
+                task_folder=task_folder,
+                message="Không có gap, sẵn sàng chạy meeting (Phase 4+5 sẽ wire).",
+            )
+
+        qg = QuestionGenerator(self.llm)
+        questions = await qg.agenerate(gaps, brain.model_dump(), brief)
+
+        if not questions:
+            return FlowResult(
+                stage=FlowStage.PAUSE_DECISION_REPORT,
+                task_folder=task_folder,
+                message="Gap có nhưng không CRITICAL/WARN, skip clarification.",
+            )
+
+        clarification_path = task_folder / "03-clarification.md"
+        write_clarification(clarification_path, questions)
+
+        return FlowResult(
+            stage=FlowStage.PAUSE_CLARIFICATION,
+            task_folder=task_folder,
+            message=f"Vui lòng trả lời {len(questions)} câu trong {clarification_path.name}",
+        )
+
     def resume_after_clarification(self, task_folder: Path) -> FlowResult:
         """Stage 2: read answers → continue flow (Phase 4+ sẽ wire research+meeting)."""
         clarification_path = task_folder / "03-clarification.md"
