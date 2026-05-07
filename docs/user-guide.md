@@ -1,4 +1,4 @@
-# User Guide — VN Business OS
+# User Guide — VN One Person Company
 
 Hướng dẫn sử dụng hàng ngày sau khi đã onboard. Xem [Getting Started](getting-started.md) trước nếu chưa cài.
 

@@ -1,4 +1,4 @@
-# Getting Started — VN Business OS
+# Getting Started — VN One Person Company
 
 Hướng dẫn từ đầu đến chạy được task đầu tiên. Khoảng **15-20 phút** nếu đã có Claude Desktop + Python 3.11+.
 

@@ -1,4 +1,4 @@
-# Troubleshooting — VN Business OS
+# Troubleshooting — VN One Person Company
 
 Lỗi thường gặp + cách fix.
 

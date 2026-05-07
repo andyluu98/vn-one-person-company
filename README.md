@@ -1,6 +1,8 @@
-# VN Business OS
+# VN One Person Company
 
-> **AI Operating System cho Doanh nghiệp Việt Nam** — CEO chat tự nhiên, các phòng ban AI họp bàn debate, sinh báo cáo + tài liệu `.docx/.xlsx` tuân thủ luật VN. Chạy qua Claude Desktop subscription, **không cần Anthropic API key**.
+> **Hệ điều hành AI cho Công ty 1 Người Việt Nam.**
+> Bạn là CEO duy nhất — 12+ phòng ban AI agents họp bàn debate, ra quyết định, sinh báo cáo + tài liệu `.docx/.xlsx` tuân thủ luật VN.
+> Chạy qua Claude Desktop subscription, **không cần Anthropic API key**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
@@ -9,17 +11,26 @@
 
 ---
 
-## ✨ Tại sao cần?
+## ✨ Dành cho ai?
 
-DN nhỏ-vừa Việt Nam thường gặp 3 vấn đề khi vận hành:
+**Solo founder Việt Nam** đang vận hành công ty 1 người (hoặc 2-3 người tinh gọn) muốn:
 
-| Vấn đề | Hậu quả |
-|---|---|
-| Không đủ HR để xây 192 tài liệu vận hành chuẩn | Vận hành ad-hoc, mỗi nhân viên một kiểu |
-| AI generic (ChatGPT) không hiểu luật VN, ngữ cảnh DN cụ thể | Output không tuân thủ pháp lý, generic, ko dùng được |
-| Plugin AI chỉ "1 prompt → 1 tài liệu" | Không có debate/kiểm chéo, sai sót cao |
+- 🏢 Có đủ **12+ phòng ban "ảo"** (Pháp chế, Tài chính, Marketing, Vận hành, ...) như công ty 100 người
+- ⚖️ Quyết định **dựa trên debate đa chiều** thay vì chỉ 1 góc nhìn của mình
+- 📄 Sinh tài liệu **tuân thủ luật VN** (Luật DN 2020, BLLĐ 2019, NĐ 15/2018 VSATTP, NĐ 13/2023 PDPA, ...)
+- 🧠 Mọi quyết định + tài liệu **lưu Obsidian + Git** — single source of truth, không lạc giữa Notion/Drive/Excel
+- 💰 **Không trả $20-100/tháng cho 5 SaaS** (Notion AI, ChatGPT, Claude API, ...). Plugin chạy qua Claude Desktop subscription duy nhất.
 
-**VN Business OS** giải quyết 3 vấn đề trên bằng kiến trúc **multi-agent debate engine** kết hợp **knowledge base luật VN** + **template chuẩn ngành**.
+### Tình huống thực tế
+
+| Bạn là | Trước đây | Với VN One Person Company |
+|---|---|---|
+| Freelancer chuẩn bị mở agency | "Hợp đồng lao động viết sao?" → Google → copy mẫu chung chung → có thể sai luật | Chat: "Tuyển trợ lý 8 triệu/tháng quận 1" → Phòng Pháp lý + Nhân sự debate → HĐLĐ chuẩn TT 200/2014 + BHXH 23.5% |
+| Chủ shop online định mở chi nhánh | "Tính ROI thế nào? Đầu tư bao nhiêu là OK?" → đoán | Chat: "Mở chi nhánh 1.2 tỷ Q3" → Phòng Tài chính + Vận hành + Tăng trưởng họp 3 vòng → execution plan có CAPEX, payback period, risks |
+| Dev solo mở SaaS | "Privacy policy viết sao cho đúng NĐ 13/2023?" → bí | Chat: "Soạn privacy policy SaaS B2B" → Phòng Pháp lý + Sản phẩm-Công nghệ debate → policy cite điều khoản cụ thể |
+| Cafe owner làm chiến dịch Tết | "Ngân sách 50tr chia thế nào?" → cảm tính | Chat: "Chiến dịch Tết 50tr cho 3 cn" → 5 phòng họp → kế hoạch + content calendar + budget breakdown |
+
+→ **Bạn không cần thuê CFO, CMO, COO. Plugin là họ.**
 
 ---
 

@@ -1,4 +1,4 @@
-# Configuration — VN Business OS
+# Configuration — VN One Person Company
 
 Các file config chính + cách tinh chỉnh.
 

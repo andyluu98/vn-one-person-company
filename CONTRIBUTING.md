@@ -1,4 +1,4 @@
-# Đóng góp cho VN Business OS
+# Đóng góp cho VN One Person Company
 
 Cảm ơn bạn quan tâm! Đây là hướng dẫn ngắn để tham gia phát triển.
 
