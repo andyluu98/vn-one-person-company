@@ -30,15 +30,35 @@ def status(vault):
 
 
 @main.command()
-@click.option("--brief", required=True, help="Task brief (Vietnamese)")
-@click.option("--vault", type=click.Path(), default=".")
-def run(brief, vault):
-    """Chạy task qua orchestrator (Stage 1: brief → clarification)."""
+@click.argument("brief_arg", required=False, default=None)
+@click.option("--brief", "brief_opt", default=None, help="Task brief (alternative to positional argument)")
+@click.option("--vault", type=click.Path(), default=".", help="Vault path (default: current directory)")
+def run(brief_arg, brief_opt, vault):
+    """Chạy task qua orchestrator (Stage 1: brief → clarification).
+
+    Cách dùng (cú pháp ngắn — khuyến nghị):
+      vn-os run "Soạn HD lao động store manager 13tr"
+
+    Hoặc cú pháp dài (backward compat):
+      vn-os run --vault . --brief "Soạn HD lao động..."
+    """
     from pathlib import Path
     from core.orchestrator.flow_controller import FlowController, FlowStage
     from core.llm.providers import get_default_provider
 
-    fc = FlowController(vault_root=Path(vault), llm=get_default_provider())
+    # Resolve brief: positional arg ưu tiên, fallback --brief option
+    brief = brief_arg or brief_opt
+    if not brief:
+        console.print("[red]✗ Thiếu brief. Dùng:[/]")
+        console.print('  [cyan]vn-os run "Nội dung brief của bạn"[/]')
+        console.print("Hoặc:")
+        console.print('  [cyan]vn-os run --brief "Nội dung brief"[/]')
+        return
+
+    from core.utils.config import apply_vault_env_to_os
+    vault_path = Path(vault)
+    apply_vault_env_to_os(vault_path)
+    fc = FlowController(vault_root=vault_path, llm=get_default_provider())
     result = fc.run(brief)
 
     if result.stage == FlowStage.PAUSE_CLARIFICATION:
@@ -62,8 +82,10 @@ def resume(task_folder):
     from core.orchestrator.flow_controller import FlowController, FlowStage
     from core.llm.providers import get_default_provider
 
+    from core.utils.config import apply_vault_env_to_os
     folder = Path(task_folder)
     vault_root = folder.parent.parent   # task_folder = vault/02-Tasks/<id>
+    apply_vault_env_to_os(vault_root)
 
     fc = FlowController(vault_root=vault_root, llm=get_default_provider())
     result = fc.resume_after_clarification(folder)
@@ -83,7 +105,9 @@ def meeting(task_folder):
     from core.orchestrator.flow_controller import FlowController, FlowStage
     from core.llm.providers import get_default_provider
 
+    from core.utils.config import apply_vault_env_to_os
     folder = Path(task_folder)
+    apply_vault_env_to_os(folder.parent.parent)
     fc = FlowController(vault_root=folder.parent.parent, llm=get_default_provider())
 
     routing_md = (folder / "01-routing.md").read_text(encoding="utf-8")
@@ -105,7 +129,9 @@ def approve(task_folder):
     from core.orchestrator.flow_controller import FlowController
     from core.llm.providers import get_default_provider
 
+    from core.utils.config import apply_vault_env_to_os
     folder = Path(task_folder)
+    apply_vault_env_to_os(folder.parent.parent)
     fc = FlowController(vault_root=folder.parent.parent, llm=get_default_provider())
     result = fc.approve_decision(folder)
     console.print(f"[green]{result.message}[/]")
@@ -119,7 +145,9 @@ def execute_cmd(task_folder):
     from core.orchestrator.flow_controller import FlowController
     from core.llm.providers import get_default_provider
 
+    from core.utils.config import apply_vault_env_to_os
     folder = Path(task_folder)
+    apply_vault_env_to_os(folder.parent.parent)
     fc = FlowController(vault_root=folder.parent.parent, llm=get_default_provider())
     result = fc.execute(folder)
     console.print(f"[green]→ DONE[/] {result.message}")

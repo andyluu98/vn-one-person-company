@@ -81,7 +81,7 @@ HĐLĐ, JD, nội quy, phiếu thu, SOP đơn giản → KHÔNG cần debate eng
 Chỉ 1 LLM call, chạy ~10–30s, không bao giờ timeout.
 
 ```
-Soạn HĐLĐ trợ lý kế toán cho cafe Sao Việt, lương 10tr, thử việc 2 tháng,
+Soạn HĐLĐ trợ lý kế toán cho cafe ABC, lương 10tr, thử việc 2 tháng,
 yêu cầu biết MISA và Thông tư 200/2014. Vault: F:\work\xyz-vault.
 ```
 

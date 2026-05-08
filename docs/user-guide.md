@@ -119,7 +119,7 @@ Soạn 1 tài liệu qua 1 LLM call (~10-30s), KHÔNG qua debate engine.
 
 **Use case:** HĐLĐ, JD, nội quy, phiếu thu, SOP đơn giản, thư mời họp...
 ```
-Soạn HĐLĐ trợ lý kế toán cho cafe Sao Việt, lương 10tr, thử việc 2 tháng.
+Soạn HĐLĐ trợ lý kế toán cho cafe ABC, lương 10tr, thử việc 2 tháng.
 ```
 Output: `<vault>/02-Tasks/<ts>-draft-<slug>/draft.md`
 

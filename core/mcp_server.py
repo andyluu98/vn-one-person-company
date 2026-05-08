@@ -19,6 +19,7 @@ Tools registered (9):
     vn_upgrade     — refresh existing vault với enriched prompts + aliases
 """
 from __future__ import annotations
+import os
 import re
 from pathlib import Path
 
@@ -60,6 +61,9 @@ def _vault_root_from_task(task_folder: Path) -> Path:
 async def vn_run(brief: str, vault: str, ctx: Context) -> dict:
     """Stage 1: brief → router → gap → clarification (PAUSE).
 
+    ⏱️ Duration: 20-50s (2-3 LLM calls). Borderline với Cowork 60s timeout.
+    Nếu fail qua chat → chạy qua PowerShell `vn-os run --vault <path> --brief "..."`.
+
     Returns task_folder path + stage. If stage == PAUSE_CLARIFICATION,
     CEO needs to answer questions in 03-clarification.md before vn_resume.
     """
@@ -95,6 +99,11 @@ def vn_meeting(
     departments: list[str] | None = None,
 ) -> dict:
     """Stage 3: research + meeting (Pro/Con + Perspective) + synthesizer.
+
+    ⚠️ TIMEOUT WARNING: Tool này chạy 7+ LLM calls tuần tự (60-180s).
+    KHÔNG dùng được qua Cowork/Claude Desktop (60s timeout hard cap).
+    Khuyến nghị: Chạy qua PowerShell `vn-os meeting <task_folder>` hoặc
+    Claude Code CLI (set MCP_TOOL_TIMEOUT=300000).
 
     Auto-extracts departments from 01-routing.md if not provided.
     Output: 07-decision-report.md (Stop 1).
@@ -162,6 +171,9 @@ async def vn_draft(
 ) -> dict:
     """Fast path: soạn 1 tài liệu boilerplate qua 1 LLM call (không debate).
 
+    ⏱️ Duration: 10-30s (1 LLM call). OK qua Cowork timeout 60s
+    cho doc ngắn (HD, JD, SOP). Doc dài có thể borderline.
+
     Dùng cho: HĐLĐ, JD, nội quy, phiếu thu, SOP đơn giản, thư mời họp...
     KHÔNG dùng cho: quyết định chiến lược, doc rủi ro pháp lý cao.
 
@@ -169,7 +181,7 @@ async def vn_draft(
     nhưng KHÔNG qua multi-perspective review.
 
     Args:
-        brief: Yêu cầu cụ thể (vd "HĐLĐ trợ lý kế toán cafe Sao Việt, lương 10tr").
+        brief: Yêu cầu cụ thể (vd "HĐLĐ trợ lý kế toán cafe ABC, lương 10tr").
         vault: Vault path.
         doc_type: Loại doc (vd "hợp đồng lao động", "JD", "nội quy", "phiếu thu").
 
@@ -191,13 +203,30 @@ async def vn_draft(
 
 
 @mcp.tool()
-def vn_status(vault: str) -> dict:
+def vn_status(vault: str = "") -> dict:
     """Inspect vault — Brain summary + active depts + tasks + tool availability.
+
+    ⚡ Duration: <1s (no LLM call). Luôn OK qua Cowork.
+
+    Vault resolution: nếu không truyền, đọc từ env var VN_OS_DEFAULT_VAULT
+    (set trên Windows qua: setx VN_OS_DEFAULT_VAULT "F:\\vaults\\<TênDN>").
 
     Live research tools (web/luật/địa phương/đối thủ) chỉ chạy khi có
     TAVILY_API_KEY. vn_status báo rõ tool nào đang sẵn sàng vs skipped để CEO biết
     decision report sẽ dựa research thật hay chỉ Brain + LLM knowledge.
     """
+    # Fallback: nếu không truyền vault, đọc từ env VN_OS_DEFAULT_VAULT
+    if not vault:
+        vault = os.environ.get("VN_OS_DEFAULT_VAULT", "")
+        if not vault:
+            return {
+                "error": (
+                    "Không tìm thấy vault path. Cách fix: "
+                    "(1) Truyền tham số vault='F:\\vaults\\<TênDN>', HOẶC "
+                    "(2) Set env var: setx VN_OS_DEFAULT_VAULT 'F:\\vaults\\<TênDN>' "
+                    "rồi restart Claude Desktop."
+                ),
+            }
     vault_path = Path(vault)
 
     # Apply vault/.env to os.environ trước khi check tool availability
@@ -244,6 +273,39 @@ def vn_status(vault: str) -> dict:
     except Exception:  # noqa: BLE001
         pass
 
+    workflow_rules = """🚨 QUY TẮC PHÂN TASK BẮT BUỘC (Claude tự áp dụng):
+
+✅ TASK NHẸ — Bạn (Claude) LÀM TRỰC TIẾP trong chat (gọi MCP tools):
+   - vn_status (xem trạng thái vault) — luôn OK
+   - obsidian_* (đọc/sửa file vault) — luôn OK
+   - Tư vấn dựa trên Brain context (KHÔNG gọi vn_run/vn_meeting/vn_draft)
+
+❌ TASK NẶNG — Bạn KHÔNG ĐƯỢC gọi tool, chỉ sinh command PowerShell cho user paste:
+   - vn_run — 20-50s, borderline với Cowork 60s timeout
+   - vn_meeting — 7+ LLM calls (60-180s), TIMEOUT chắc chắn
+   - vn_approve — có LLM call, TIMEOUT
+   - vn_draft — DeepSeek thực tế > 60s, TIMEOUT
+   - vn_resume — có LLM call, TIMEOUT
+
+Khi user yêu cầu task NẶNG (soạn doc, debate, brainstorm, phân tích chiến lược):
+   1. KHÔNG gọi tool MCP — chỉ sinh command PowerShell
+   2. Format command sẵn copy-paste với cú pháp NGẮN:
+      cd "<vault_path>"
+      $vnos = "<repo>\\.venv\\Scripts\\vn-os.exe"
+      & $vnos run "<brief content>"           # KHÔNG cần --vault --brief
+      & $vnos meeting "<task_folder>"
+      & $vnos approve "<task_folder>"
+      & $vnos execute "<task_folder>"
+      
+      ⚠️ ĐỪNG dùng cú pháp dài kiểu: & $vnos run --vault . --brief "..."
+      → CLI chấp nhận cả 2 nhưng cú pháp ngắn dễ đọc + ít sai hơn.
+   3. Báo thời gian ước tính
+   4. Hướng dẫn user vào Obsidian xem kết quả tại 02-Tasks/<folder>/
+   5. Đợi user báo "xong" → đọc file qua obsidian_get_file_contents → tóm tắt
+
+Tham khảo chi tiết: F:\\.work\\vn-one-person-company\\README-USER.md (Phần 3)
+"""
+
     return {
         "vault": str(vault_path),
         "icp": brain.strategy.icp[:200],
@@ -255,6 +317,7 @@ def vn_status(vault: str) -> dict:
         "tools_live": list_available_tools(),
         "tools_skipped": list_skipped_tools(),
         "packs": packs_info,
+        "_workflow_rules": workflow_rules,
     }
 
 

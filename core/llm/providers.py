@@ -302,5 +302,49 @@ class MCPSamplingProvider:
         return str(content)
 
 
+class DeepSeekProvider:
+    """LLM provider for DeepSeek API (OpenAI-compatible).
+
+    Endpoint: https://api.deepseek.com (OpenAI-compat) hoặc /anthropic
+    Models: deepseek-v4-pro (default, premium), deepseek-v4-flash (rẻ ~6x).
+    Rẻ ~10x so với Claude, hợp DN nhỏ VN.
+    """
+    name = "deepseek"
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        default_model: str = "deepseek-v4-pro",
+        base_url: str = "https://api.deepseek.com",
+    ):
+        self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
+        self.default_model = default_model
+        self.base_url = base_url
+
+    def complete(self, messages: list[dict], model: str | None = None) -> str:
+        from openai import OpenAI
+        client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        # DeepSeek v4-pro mặc định thinking mode ON (chậm + tốn token).
+        # Tắt qua extra_body để response nhanh hơn 3-5x cho meeting nodes.
+        resp = client.chat.completions.create(
+            model=model or self.default_model,
+            messages=messages,
+            max_tokens=4096,
+            extra_body={"thinking": {"type": "disabled"}},
+        )
+        return resp.choices[0].message.content or ""
+
+    async def acomplete(self, messages: list[dict], model: str | None = None) -> str:
+        return await asyncio.to_thread(self.complete, messages, model)
+
+
 def get_default_provider() -> LLMProvider:
+    """Pick provider based on env vars (priority: DeepSeek > Anthropic).
+
+    DeepSeek ưu tiên vì rẻ ~10x — phù hợp DN nhỏ VN.
+    Set DEEPSEEK_API_KEY trong vault/.env hoặc os.environ để dùng DeepSeek.
+    Fallback Anthropic nếu chỉ có ANTHROPIC_API_KEY.
+    """
+    if os.getenv("DEEPSEEK_API_KEY"):
+        return DeepSeekProvider()
     return ClaudeProvider()
