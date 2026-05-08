@@ -44,31 +44,14 @@ Trả về CHỈ nội dung Markdown (không kèm giải thích, không wrap tro
 """
 
 
-def draft_document(
-    brief: str,
-    vault_root: Path,
-    llm,
-    doc_type: str = "tài liệu",
-) -> dict:
-    """Render single document via 1 LLM call. Skip debate.
-
-    Args:
-        brief: Yêu cầu CEO (vd "HĐLĐ tuyển trợ lý kế toán cafe Sao Việt, lương 10tr").
-        vault_root: Vault path để load Brain + write output.
-        llm: LLMProvider (MCPSamplingProvider khi qua Claude Desktop).
-        doc_type: Loại doc gợi ý cho LLM (vd "hợp đồng lao động", "JD", "nội quy").
-
-    Returns:
-        dict: {task_folder, draft_path, message}
-    """
+def _prepare_draft(brief: str, vault_root: Path, doc_type: str) -> tuple[Path, list[dict]]:
+    """Common setup for sync/async draft: tạo task folder, write brief, build messages."""
     vault = ObsidianVault(vault_root)
 
-    # Slug từ brief — reuse logic flow_controller
     from core.orchestrator.flow_controller import _slugify
     slug = "draft-" + _slugify(brief, max_len=40)
     task_folder = vault.create_task_folder(slug)
 
-    # Brain context (best-effort — draft không bắt buộc Brain đầy đủ)
     brain_summary = "(Brain chưa khởi tạo)"
     try:
         brain = BrainReader(vault_root).load()
@@ -76,27 +59,25 @@ def draft_document(
     except Exception:
         pass
 
-    # Save brief
     (task_folder / "00-brief.md").write_text(
         f"---\ntype: brief\ndoc_type: {doc_type}\n---\n# Brief\n\n{brief}\n",
         encoding="utf-8",
     )
 
-    # Single LLM call
     messages = [
         {
             "role": "system",
             "content": _DRAFT_PROMPT.format(
-                brief=brief,
-                doc_type=doc_type,
-                brain_summary=brain_summary,
+                brief=brief, doc_type=doc_type, brain_summary=brain_summary,
             ),
         },
         {"role": "user", "content": f"Soạn {doc_type} theo yêu cầu trên."},
     ]
-    body = llm.complete(messages)
+    return task_folder, messages
 
-    # Strip code fences if LLM wrapped despite instruction
+
+def _finalize_draft(task_folder: Path, body: str, doc_type: str, vault_root: Path) -> dict:
+    """Strip fences, write draft.md, return result dict."""
     body = body.strip()
     if body.startswith("```"):
         lines = body.splitlines()
@@ -110,7 +91,6 @@ def draft_document(
         f"source: vn_draft (single-call, no debate)\n---\n\n{body}\n",
         encoding="utf-8",
     )
-
     return {
         "task_folder": str(task_folder),
         "draft_path": str(draft_path),
@@ -120,3 +100,31 @@ def draft_document(
             "Nếu là quyết định lớn, hãy chạy vn_run/vn_meeting để debate."
         ),
     }
+
+
+def draft_document(
+    brief: str,
+    vault_root: Path,
+    llm,
+    doc_type: str = "tài liệu",
+) -> dict:
+    """Sync version — dùng cho CLI / tests. KHÔNG dùng từ MCP tool sync (deadlock)."""
+    task_folder, messages = _prepare_draft(brief, vault_root, doc_type)
+    body = llm.complete(messages)
+    return _finalize_draft(task_folder, body, doc_type, vault_root)
+
+
+async def adraft_document(
+    brief: str,
+    vault_root: Path,
+    llm,
+    doc_type: str = "tài liệu",
+) -> dict:
+    """Async version — bắt buộc dùng từ MCP tool async để tránh deadlock event loop.
+
+    Cùng logic draft_document nhưng await llm.acomplete() trực tiếp trên event loop
+    hiện tại (không tạo new loop / threading).
+    """
+    task_folder, messages = _prepare_draft(brief, vault_root, doc_type)
+    body = await llm.acomplete(messages)
+    return _finalize_draft(task_folder, body, doc_type, vault_root)

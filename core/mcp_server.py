@@ -154,7 +154,7 @@ def vn_execute(task_folder: str, ctx: Context) -> dict:
 
 
 @mcp.tool()
-def vn_draft(
+async def vn_draft(
     brief: str,
     vault: str,
     ctx: Context,
@@ -175,14 +175,14 @@ def vn_draft(
 
     Returns dict {task_folder, draft_path, message}.
     """
-    from core.orchestrator.draft import draft_document
+    from core.orchestrator.draft import adraft_document
     from core.utils.config import apply_vault_env_to_os
 
     vault_path = Path(vault)
     apply_vault_env_to_os(vault_path)
 
     llm = MCPSamplingProvider(ctx.session)
-    return draft_document(
+    return await adraft_document(
         brief=brief,
         vault_root=vault_path,
         llm=llm,
