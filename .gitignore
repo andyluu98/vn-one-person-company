@@ -64,3 +64,6 @@ references/business-builder.plugin/
 scratch/
 playground/
 TODO.private.md
+
+# Local Claude Code settings
+.claude/settings.local.json
