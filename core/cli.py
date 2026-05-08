@@ -171,31 +171,46 @@ def onboard(vault):
     type=click.Path(exists=True, file_okay=False),
     help="Vault path để load .env (TAVILY_API_KEY, ...) inject vào MCP env",
 )
-def install_mcp_cmd(vault):
-    """Install vn-business-os as MCP server in Claude Desktop config.
+@click.option(
+    "--target",
+    type=click.Choice(["desktop", "claude-code", "both"], case_sensitive=False),
+    default="both",
+    show_default=True,
+    help="Host để đăng ký MCP server",
+)
+def install_mcp_cmd(vault, target):
+    """Install vn-business-os as MCP server (Claude Desktop + Claude Code).
 
-    Edits claude_desktop_config.json to register MCP server entry.
-    Pass --vault để inject API keys từ <vault>/.env vào mcpServers env, giúp
-    search tools (Tavily) chạy được khi Claude Desktop launch MCP server.
-
-    After install, restart Claude Desktop to load the server.
+    Mặc định đăng ký vào cả hai. Dùng --target để chọn riêng.
+    Sau khi install, restart Claude Desktop / Claude Code để load server.
     """
-    from core.install_mcp import install
+    from core.install_mcp import install_for_target
     from pathlib import Path
-    result = install(vault_path=Path(vault) if vault else None)
-    if not result["ok"]:
-        console.print(f"[red]✗ {result.get('error', 'install failed')}[/]")
-        return
-    console.print(f"[green]✓ Installed MCP server '{result['server_name']}'[/]")
-    console.print(f"   Config: {result['config_path']}")
-    if result.get("backup"):
-        console.print(f"   Backup: {result['backup']}")
-    console.print(f"   Command: {result['command']} {' '.join(result.get('args', []))}")
-    if result.get("env_keys_injected"):
-        console.print(
-            f"   Env injected: {', '.join(result['env_keys_injected'])}"
-        )
-    console.print(f"\n[bold]Bước tiếp:[/] Restart Claude Desktop để load MCP server.")
+
+    results = install_for_target(
+        target=target,
+        vault_path=Path(vault) if vault else None,
+    )
+
+    for host, result in results.items():
+        label = "Claude Desktop" if host == "desktop" else "Claude Code"
+        if not result["ok"]:
+            console.print(f"[red]✗ {label}: {result.get('error', 'install failed')}[/]")
+            continue
+        console.print(f"[green]✓ {label}:[/] {result['config_path']}")
+        if result.get("backup"):
+            console.print(f"   Backup: {result['backup']}")
+        if result.get("env_keys_injected"):
+            console.print(f"   Env injected: {', '.join(result['env_keys_injected'])}")
+
+    targets_installed = [k for k, v in results.items() if v.get("ok")]
+    if targets_installed:
+        parts = []
+        if "desktop" in targets_installed:
+            parts.append("Claude Desktop")
+        if "claude-code" in targets_installed:
+            parts.append("Claude Code")
+        console.print(f"\n[bold]Bước tiếp:[/] Restart {' + '.join(parts)} để load MCP server.")
 
 
 @main.command(name="uninstall-mcp")
