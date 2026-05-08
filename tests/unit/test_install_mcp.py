@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 import pytest
-from core.install_mcp import install, uninstall, get_config_path
+from core.install_mcp import install, uninstall, get_config_path, get_claude_code_config_path, install_for_target
 from core.utils.config import save_vault_env
 
 
@@ -120,9 +120,6 @@ def test_install_no_vault_no_env_field(tmp_path):
     assert result["env_keys_injected"] == []
 
 
-from core.install_mcp import get_claude_code_config_path, install_for_target
-
-
 def test_get_claude_code_config_path_returns_dot_claude_json():
     p = get_claude_code_config_path()
     assert p.name == ".claude.json"
@@ -184,3 +181,29 @@ def test_install_for_target_claude_code_preserves_existing_keys(tmp_path, monkey
 def test_install_for_target_invalid_target_raises():
     with pytest.raises(ValueError, match="target must be"):
         install_for_target("invalid", vault_path=None)
+
+
+def test_install_for_target_both_partial_failure(tmp_path, monkeypatch):
+    """If one target raises, other still succeeds and error is captured in result."""
+    desktop_cfg = tmp_path / "claude_desktop_config.json"
+    monkeypatch.setattr("core.install_mcp.get_config_path", lambda: desktop_cfg)
+
+    cc_cfg = tmp_path / "dot_claude.json"
+    monkeypatch.setattr("core.install_mcp.get_claude_code_config_path", lambda: cc_cfg)
+
+    # Patch install to raise only when called with the claude-code config path
+    original_install = install
+
+    def install_with_failure(config_path, vault_path=None, **kwargs):
+        if config_path == cc_cfg:
+            raise OSError("simulated write failure")
+        return original_install(config_path=config_path, vault_path=vault_path, **kwargs)
+
+    monkeypatch.setattr("core.install_mcp.install", install_with_failure)
+
+    results = install_for_target("both", vault_path=None)
+
+    assert results["desktop"]["ok"] is True
+    assert results["claude-code"]["ok"] is False
+    assert "error" in results["claude-code"]
+    assert "simulated write failure" in results["claude-code"]["error"]

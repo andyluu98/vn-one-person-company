@@ -53,6 +53,7 @@ def install_for_target(
     """Install MCP server for target: 'desktop', 'claude-code', or 'both'.
 
     Returns dict with target name as key, install() result as value.
+    Each result has 'ok' bool; on exception, {'ok': False, 'error': str(e)}.
     Raises ValueError if target is invalid.
     """
     valid = {"desktop", "claude-code", "both"}
@@ -61,15 +62,21 @@ def install_for_target(
 
     results: dict = {}
     if target in ("desktop", "both"):
-        results["desktop"] = install(
-            config_path=get_config_path(),
-            vault_path=vault_path,
-        )
+        try:
+            results["desktop"] = install(
+                config_path=get_config_path(),
+                vault_path=vault_path,
+            )
+        except Exception as e:
+            results["desktop"] = {"ok": False, "error": str(e)}
     if target in ("claude-code", "both"):
-        results["claude-code"] = install(
-            config_path=get_claude_code_config_path(),
-            vault_path=vault_path,
-        )
+        try:
+            results["claude-code"] = install(
+                config_path=get_claude_code_config_path(),
+                vault_path=vault_path,
+            )
+        except Exception as e:
+            results["claude-code"] = {"ok": False, "error": str(e)}
     return results
 
 
