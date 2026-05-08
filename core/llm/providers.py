@@ -65,33 +65,47 @@ class MCPSamplingProvider:
         self,
         mcp_server: Any,
         default_model: str = "claude-sonnet-4-6",
-        max_retries: int = 3,
+        max_retries: int = 4,
         timeout_seconds: float = 120.0,
         retry_initial_delay: float = 1.0,
+        rate_limit_initial_delay: float = 15.0,
     ):
         """
         mcp_server: object exposing `create_message(...)` — real MCP `ServerSession`
                     or a duck-typed compatible object (mock-friendly for testing).
         max_retries: retries cho transient errors (rate limit, timeout, network)
         timeout_seconds: hard timeout cho mỗi sampling call
-        retry_initial_delay: backoff delay đầu tiên (sec); double mỗi retry
+        retry_initial_delay: backoff delay (sec) cho transient errors (timeout/network);
+                             double mỗi retry
+        rate_limit_initial_delay: backoff delay (sec) cho rate limit (429); double mỗi
+                                  retry. Anthropic reset window ~60s → cần wait dài hơn.
+                                  Default 15s → 30s → 60s → 120s = total ~225s đủ qua 1
+                                  reset window.
         """
         self.server = mcp_server
         self.default_model = default_model
         self.max_retries = max_retries
         self.timeout_seconds = timeout_seconds
         self.retry_initial_delay = retry_initial_delay
+        self.rate_limit_initial_delay = rate_limit_initial_delay
 
     @staticmethod
-    def _is_retryable(exc: BaseException) -> bool:
+    def _is_rate_limit(exc: BaseException) -> bool:
+        """429 / rate limit specifically — cần backoff dài hơn other transients."""
+        name = type(exc).__name__.lower()
+        msg = str(exc).lower()
+        return "ratelimit" in name or "429" in msg or "rate limit" in msg
+
+    @classmethod
+    def _is_retryable(cls, exc: BaseException) -> bool:
         """Xác định exception nào nên retry (rate limit / timeout / transient network).
 
         Nhận diện qua tên class hoặc message — cover Anthropic, MCP, asyncio, httpx.
         """
+        if cls._is_rate_limit(exc):
+            return True
         name = type(exc).__name__.lower()
         msg = str(exc).lower()
-        if "ratelimit" in name or "429" in msg or "rate limit" in msg:
-            return True
         if "timeout" in name or "timeout" in msg or "timed out" in msg:
             return True
         if "connection" in name or "connection" in msg:
@@ -100,14 +114,20 @@ class MCPSamplingProvider:
             return True
         return False
 
+    def _initial_delay_for(self, exc: BaseException) -> float:
+        """Pick initial backoff: longer for 429, shorter for other transients."""
+        return self.rate_limit_initial_delay if self._is_rate_limit(exc) else self.retry_initial_delay
+
     def complete(self, messages: list[dict], model: str | None = None) -> str:
         """Send sampling request via MCP với retry-with-backoff + timeout.
 
         MCP SamplingMessage chỉ chấp nhận role 'user'/'assistant' — system message
         tách vào kwarg `system_prompt`. Retry cho rate limit/timeout/network errors.
+        Backoff cho 429 dài hơn (15s base) so với transient (1s base) — Anthropic
+        rate limit reset ~60s, cần wait đủ qua reset window.
         """
         last_exc: BaseException | None = None
-        delay = self.retry_initial_delay
+        delay: float | None = None  # set theo error type ở exception handler
 
         for attempt in range(self.max_retries + 1):
             try:
@@ -116,6 +136,8 @@ class MCPSamplingProvider:
                 last_exc = e
                 if attempt >= self.max_retries or not self._is_retryable(e):
                     raise
+                if delay is None:
+                    delay = self._initial_delay_for(e)
                 import time
                 time.sleep(delay)
                 delay *= 2  # exponential backoff
@@ -152,9 +174,10 @@ class MCPSamplingProvider:
         FastMCP gọi sync tool trực tiếp trên event loop, nên complete() bị deadlock
         khi cố chạy create_message() trong ThreadPoolExecutor mới. acomplete() await
         create_message() trực tiếp trên event loop hiện tại — không có threading.
+        Backoff cho 429 dài hơn (15s base) so với transient (1s base).
         """
         last_exc: BaseException | None = None
-        delay = self.retry_initial_delay
+        delay: float | None = None
 
         for attempt in range(self.max_retries + 1):
             try:
@@ -163,6 +186,8 @@ class MCPSamplingProvider:
                 last_exc = e
                 if attempt >= self.max_retries or not self._is_retryable(e):
                     raise
+                if delay is None:
+                    delay = self._initial_delay_for(e)
                 import asyncio
                 await asyncio.sleep(delay)
                 delay *= 2
