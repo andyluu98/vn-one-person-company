@@ -4,7 +4,7 @@
 > Bạn là CEO duy nhất — 12+ phòng ban AI agents họp bàn debate, ra quyết định, sinh báo cáo + tài liệu `.docx/.xlsx` tuân thủ luật VN.
 > Chạy qua Claude Desktop subscription, **không cần Anthropic API key**.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/built_on-LangGraph-purple.svg)](https://github.com/langchain-ai/langgraph)
 [![Tests](https://img.shields.io/badge/tests-261_passed-brightgreen.svg)](#)
@@ -218,9 +218,13 @@ Xem [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📄 License
 
-MIT — © 2026 VN Business OS Contributors
+**Apache License 2.0** — © 2026 VN Business OS Contributors
 
-**Credits:**
+Xem [LICENSE](LICENSE) cho full text và [NOTICE](NOTICE) cho attribution chi tiết.
+
+Apache 2.0 cho phép sử dụng commercial + modify + redistribute, đồng thời **bảo vệ tên/logo "VN Business OS" khỏi bị fork dùng quảng cáo sản phẩm khác** (Section 6) và đảm bảo người fork phải **ghi rõ các thay đổi** đã làm.
+
+**Credits (đã chi tiết trong [NOTICE](NOTICE)):**
 - 192 template tiếng Việt trong `templates-vn/` adapted from `business-builder.plugin`
-- Engine debate pattern adapted from [TradingAgents](https://github.com/TauricResearch/TradingAgents)
+- Engine debate pattern adapted from [TradingAgents](https://github.com/TauricResearch/TradingAgents) (Apache 2.0)
 - Role definitions reference from [agency-agents](https://github.com/msitarzewski/agency-agents)

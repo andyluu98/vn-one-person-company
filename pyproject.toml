@@ -7,7 +7,7 @@ name = "vn-one-person-company"
 version = "0.2.0"
 description = "AI Operating System for Vietnamese One-Person Companies — solo founder + 12 AI departments debate to decide and produce VN-compliant docs"
 authors = [{ name = "VN Business OS Contributors" }]
-license = "MIT"
+license = "Apache-2.0"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

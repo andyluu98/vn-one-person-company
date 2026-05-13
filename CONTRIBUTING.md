@@ -93,4 +93,4 @@ Mở issue trên GitHub với template phù hợp.
 
 ## License
 
-Đóng góp đồng nghĩa bạn đồng ý code release dưới MIT License.
+Đóng góp đồng nghĩa bạn đồng ý code release dưới **Apache License 2.0** (xem [LICENSE](LICENSE) và [NOTICE](NOTICE)).
