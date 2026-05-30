@@ -221,6 +221,7 @@ python -m pytest tests/ -q
 ## 📚 Documentation
 
 - [`docs/getting-started.md`](docs/getting-started.md) — cài đặt + onboard chi tiết
+- [`docs/install-claude-code.md`](docs/install-claude-code.md) — **cài Claude Code bước-bước + kịch bản tương tác** (cho học viên)
 - [`docs/user-guide.md`](docs/user-guide.md) — flow 5 stage + ví dụ
 - [`docs/configuration.md`](docs/configuration.md) — `.vncoderc`, packs, BYOT
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — lỗi thường gặp
